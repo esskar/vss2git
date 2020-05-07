@@ -25,25 +25,22 @@ namespace Hpdi.VssPhysicalLib
     {
         public const string SIGNATURE = "BF";
 
-        int prevBranchOffset;
-        string branchFile;
-
         public override string Signature { get { return SIGNATURE; } }
-        public int PrevBranchOffset { get { return prevBranchOffset; } }
-        public string BranchFile { get { return branchFile; } }
+        public int PrevBranchOffset { get; private set; }
+        public string BranchFile { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
             base.Read(reader, header);
 
-            prevBranchOffset = reader.ReadInt32();
-            branchFile = reader.ReadString(12);
+            PrevBranchOffset = reader.ReadInt32();
+            BranchFile = reader.ReadString(12);
         }
 
         public override void Dump(TextWriter writer)
         {
-            writer.WriteLine("  Prev branch offset: {0:X6}", prevBranchOffset);
-            writer.WriteLine("  Branch file: {0}", branchFile);
+            writer.WriteLine("  Prev branch offset: {0:X6}", PrevBranchOffset);
+            writer.WriteLine("  Branch file: {0}", BranchFile);
         }
     }
 }

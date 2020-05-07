@@ -70,10 +70,10 @@ namespace Hpdi.HashLib
         {
             var table = new ushort[256];
             var mask = (ushort)(reverse ? 1 : 0x8000);
-            for (int i = 0; i < table.Length; ++i)
+            for (var i = 0; i < table.Length; ++i)
             {
                 var value = (ushort)(reverse ? i : i << 8);
-                for (int j = 0; j < 8; ++j)
+                for (var j = 0; j < 8; ++j)
                 {
                     var xor = (value & mask) != 0;
                     value = reverse ? (ushort)(value >> 1) : (ushort)(value << 1);

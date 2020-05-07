@@ -23,30 +23,25 @@ namespace Hpdi.VssPhysicalLib
     /// <author>Trevor Robinson</author>
     public class NameFile : VssRecordFile
     {
-        private readonly NameHeaderRecord header = new NameHeaderRecord();
-
-        public NameHeaderRecord Header
-        {
-            get { return header; }
-        }
+        public NameHeaderRecord Header { get; } = new NameHeaderRecord();
 
         public NameFile(string filename, Encoding encoding)
             : base(filename, encoding)
         {
-            ReadRecord(header);
+            ReadRecord(Header);
         }
 
         public NameRecord GetName(int offset)
         {
             reader.Offset = offset;
-            NameRecord record = new NameRecord();
+            var record = new NameRecord();
             ReadRecord(record);
             return record;
         }
 
         public NameRecord GetNextName()
         {
-            NameRecord record = new NameRecord();
+            var record = new NameRecord();
             return ReadNextRecord(record) ? record : null;
         }
     }

@@ -14,7 +14,7 @@
  */
 
 using System;
-using System.Windows.Forms;
+using VssContracts;
 
 namespace Hpdi.Vss2Git
 {
@@ -26,11 +26,13 @@ namespace Hpdi.Vss2Git
     {
         protected readonly WorkQueue workQueue;
         protected readonly Logger logger;
+        private readonly IMessageDispatcher messageDispatcher;
 
-        public Worker(WorkQueue workQueue, Logger logger)
+        protected Worker(WorkQueue workQueue, Logger logger, IMessageDispatcher messageDispatcher)
         {
             this.workQueue = workQueue;
             this.logger = logger;
+            this.messageDispatcher = messageDispatcher;
         }
 
         protected void LogStatus(object work, string status)
@@ -54,8 +56,8 @@ namespace Hpdi.Vss2Git
 
         protected void ReportError(string message)
         {
-            var button = MessageBox.Show(message, "Error", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
-            if (button == DialogResult.Cancel)
+            var result = messageDispatcher.Dispatch(MessageType.Error, message, MessageChoice.OkCancel);
+            if (result == MessageHandleResult.Cancel)
             {
                 workQueue.Abort();
             }

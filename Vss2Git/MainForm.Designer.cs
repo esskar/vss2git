@@ -103,7 +103,7 @@
             this.encodingLabel.Name = "encodingLabel";
             this.encodingLabel.Size = new System.Drawing.Size(52, 13);
             this.encodingLabel.TabIndex = 6;
-            this.encodingLabel.Text = "Encoding";
+            this.encodingLabel.Text = "CodePage";
             // 
             // encodingComboBox
             // 

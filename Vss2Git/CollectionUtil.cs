@@ -27,8 +27,7 @@ namespace Hpdi.Vss2Git
     {
         public static bool IsEmpty(IEnumerable items)
         {
-            var itemCollection = items as ICollection;
-            if (itemCollection != null)
+            if (items is ICollection itemCollection)
             {
                 return itemCollection.Count == 0;
             }
@@ -40,14 +39,13 @@ namespace Hpdi.Vss2Git
 
         public static int CountItems(IEnumerable items)
         {
-            var itemCollection = items as ICollection;
-            if (itemCollection != null)
+            if (items is ICollection itemCollection)
             {
                 return itemCollection.Count;
             }
             else
             {
-                int count = 0;
+                var count = 0;
                 foreach (var item in items)
                 {
                     ++count;

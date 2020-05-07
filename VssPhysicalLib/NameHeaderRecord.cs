@@ -25,23 +25,21 @@ namespace Hpdi.VssPhysicalLib
     {
         public const string SIGNATURE = "HN";
 
-        int eofOffset;
-
         public override string Signature { get { return SIGNATURE; } }
-        public int EofOffset { get { return eofOffset; } }
+        public int EofOffset { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
             base.Read(reader, header);
 
             reader.Skip(16); // reserved; always 0
-            eofOffset = reader.ReadInt32();
+            EofOffset = reader.ReadInt32();
             // remaining reserved; always 0
         }
 
         public override void Dump(TextWriter writer)
         {
-            writer.WriteLine("  EOF offset: {0:X6}", eofOffset);
+            writer.WriteLine("  EOF offset: {0:X6}", EofOffset);
         }
     }
 }

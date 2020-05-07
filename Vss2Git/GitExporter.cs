@@ -25,6 +25,7 @@ using System.Xml.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using Hpdi.VssLogicalLib;
+using VssContracts;
 
 namespace Hpdi.Vss2Git
 {
@@ -39,73 +40,46 @@ namespace Hpdi.Vss2Git
         private readonly ChangesetBuilder changesetBuilder;
         private readonly StreamCopier streamCopier = new StreamCopier();
         private readonly HashSet<string> tagsUsed = new HashSet<string>();
-        private bool ignoreErrors = false;
-        private string defaultComment = "";
+        private readonly IMessageDispatcher messageDispatcher;
 
-        private string emailMapFile = "emailmap.xml";
-        public string EmailMapFile
-        {
-            get { return emailMapFile; }
-            set { emailMapFile = value; }
-        }
+        public string EmailMapFile { get; set; }
 
-        private Dictionary<string, string> emailMap = new Dictionary<string, string>();
-        public System.Collections.Generic.Dictionary<string, string> EmailMap
-        {
-            get { return emailMap; }
-            set { emailMap = value; }
-        }
+        public Dictionary<string, string> EmailMap { get; set; } = new Dictionary<string, string>();
 
-        private string emailDomain = "localhost";
-        public string EmailDomain
-        {
-            get { return emailDomain; }
-            set { emailDomain = value; }
-        }
+        public string EmailDomain { get; set; } = "localhost";
 
-        private Encoding commitEncoding = Encoding.UTF8;
-        public Encoding CommitEncoding
-        {
-            get { return commitEncoding; }
-            set { commitEncoding = value; }
-        }
+        public Encoding CommitEncoding { get; set; } = Encoding.UTF8;
 
-        private bool forceAnnotatedTags = true;
-        public bool ForceAnnotatedTags
-        {
-            get { return forceAnnotatedTags; }
-            set { forceAnnotatedTags = value; }
-        }
+        public bool ForceAnnotatedTags { get; set; } = true;
 
-        public bool IgnoreErrors
-        {
-            get { return ignoreErrors; }
-            set { ignoreErrors = value; }
-        }
+        public bool IgnoreErrors { get; set; } = false;
 
-        public string DefaultComment
-        {
-            get { return defaultComment; }
-            set { defaultComment = value; }
-        }
+        public string DefaultComment { get; set; } = "";
 
-        public GitExporter(WorkQueue workQueue, Logger logger,
-            RevisionAnalyzer revisionAnalyzer, ChangesetBuilder changesetBuilder)
-            : base(workQueue, logger)
+        public GitExporter(
+            WorkQueue workQueue, Logger logger,
+            RevisionAnalyzer revisionAnalyzer,
+            ChangesetBuilder changesetBuilder,
+            IMessageDispatcher messageDispatcher)
+            : base(workQueue, logger, messageDispatcher)
         {
-            this.database = revisionAnalyzer.Database;
+            database = revisionAnalyzer.Database;
             this.revisionAnalyzer = revisionAnalyzer;
             this.changesetBuilder = changesetBuilder;
+            this.messageDispatcher = messageDispatcher;
         }
 
         public bool ReadEmailMap()
         {
+            if (string.IsNullOrEmpty(EmailMapFile))
+                return true;
+
             try
             {
-                XDocument xdoc = XDocument.Load(emailMapFile);
+                var xdoc = XDocument.Load(EmailMapFile);
                 foreach (var map in xdoc.Elements("map"))
                 {
-                    emailMap.Add(map.Attribute("name").Value.ToLower(), map.Attribute("email").Value);
+                    EmailMap.Add(map.Attribute("name").Value.ToLower(), map.Attribute("email").Value);
                 }
             }
             catch (FileNotFoundException)
@@ -132,27 +106,27 @@ namespace Hpdi.Vss2Git
 
                 while(!ReadEmailMap())
                 {
-                    var button = MessageBox.Show("Email map file not found. ",
-                        "Error", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Error);
-                    if (button == DialogResult.Abort)
+                    var result = messageDispatcher.Dispatch(
+                        MessageType.Error, "Email map file not found.", 
+                        MessageChoice.OkCancelIgnore);
+                    if (result == MessageHandleResult.Cancel)
                     {
                         workQueue.Abort();
                         return;
                     }
-                    if (button == DialogResult.Ignore)
+                    if (result == MessageHandleResult.Ignore)
                         break;
                 }
 
-                var git = new GitWrapper(repoPath, logger);
-                git.CommitEncoding = commitEncoding;
+                var git = new GitWrapper(repoPath, logger) {CommitEncoding = CommitEncoding};
 
                 while (!git.FindExecutable())
                 {
-                    var button = MessageBox.Show("Git not found in PATH. " +
+                    var result = messageDispatcher.Dispatch(MessageType.Error, 
+                        "Git not found in PATH. " +
                         "If you need to modify your PATH variable, please " +
-                        "restart the program for the changes to take effect.",
-                        "Error", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
-                    if (button == DialogResult.Cancel)
+                        "restart the program for the changes to take effect.", MessageChoice.OkCancel);
+                    if (result == MessageHandleResult.Cancel)
                     {
                         workQueue.Abort();
                         return;
@@ -164,11 +138,11 @@ namespace Hpdi.Vss2Git
                     return;
                 }
 
-                if (commitEncoding.WebName != "utf-8")
+                if (CommitEncoding.WebName != "utf-8")
                 {
                     AbortRetryIgnore(delegate
                     {
-                        git.SetConfig("i18n.commitencoding", commitEncoding.WebName);
+                        git.SetConfig("i18n.commitencoding", CommitEncoding.WebName);
                     });
                 }
 
@@ -231,7 +205,7 @@ namespace Hpdi.Vss2Git
                     // create tags for any labels in the changeset
                     if (labels.Count > 0)
                     {
-                        foreach (Revision label in labels)
+                        foreach (var label in labels)
                         {
                             var labelName = ((VssLabelAction)label.Action).Label;
                             if (string.IsNullOrEmpty(labelName))
@@ -256,7 +230,7 @@ namespace Hpdi.Vss2Git
                                 // annotated tags require (and are implied by) a tag message;
                                 // tools like Mercurial's git converter only import annotated tags
                                 var tagComment = label.Comment;
-                                if (string.IsNullOrEmpty(tagComment) && forceAnnotatedTags)
+                                if (string.IsNullOrEmpty(tagComment) && ForceAnnotatedTags)
                                 {
                                     // use the original VSS label as the tag message if none was provided
                                     tagComment = labelName;
@@ -293,7 +267,7 @@ namespace Hpdi.Vss2Git
             GitWrapper git, LinkedList<Revision> labels)
         {
             var needCommit = false;
-            foreach (Revision revision in changeset.Revisions)
+            foreach (var revision in changeset.Revisions)
             {
                 if (workQueue.IsAborting)
                 {
@@ -319,7 +293,6 @@ namespace Hpdi.Vss2Git
                 // null if a project was moved and its original location was
                 // subsequently destroyed
                 var project = revision.Item;
-                var projectName = project.LogicalName;
                 var projectPath = pathMapper.GetProjectPath(project.PhysicalName);
                 var projectDesc = projectPath;
                 if (projectPath == null)
@@ -330,8 +303,7 @@ namespace Hpdi.Vss2Git
 
                 VssItemName target = null;
                 string targetPath = null;
-                var namedAction = revision.Action as VssNamedAction;
-                if (namedAction != null)
+                if (revision.Action is VssNamedAction namedAction)
                 {
                     target = namedAction.Name;
                     if (projectPath != null)
@@ -340,9 +312,9 @@ namespace Hpdi.Vss2Git
                     }
                 }
 
-                bool isAddAction = false;
-                bool writeProject = false;
-                bool writeFile = false;
+                var isAddAction = false;
+                var writeProject = false;
+                var writeFile = false;
                 VssItemInfo itemInfo = null;
                 switch (actionType)
                 {
@@ -426,8 +398,7 @@ namespace Hpdi.Vss2Git
                                 if (target.IsProject ? Directory.Exists(sourcePath) : File.Exists(sourcePath))
                                 {
                                     // renaming a file or a project that contains files?
-                                    var projectInfo = itemInfo as VssProjectInfo;
-                                    if (projectInfo == null || (projectInfo.ContainsFiles() && projectInfo.Items.All(x => !x.Destroyed)))
+                                    if (!(itemInfo is VssProjectInfo projectInfo) || (projectInfo.ContainsFiles() && projectInfo.Items.All(x => !x.Destroyed)))
                                     {
                                         CaseSensitiveRename(sourcePath, targetPath, git.Move);
                                         needCommit = true;
@@ -590,7 +561,7 @@ namespace Hpdi.Vss2Git
                     else if (writeFile)
                     {
                         // write current rev to working path
-                        int version = pathMapper.GetFileVersion(target.PhysicalName);
+                        var version = pathMapper.GetFileVersion(target.PhysicalName);
                         if (WriteRevisionTo(target.PhysicalName, version, targetPath))
                         {
                             // add file explicitly, so it is visible to subsequent git operations
@@ -634,15 +605,15 @@ namespace Hpdi.Vss2Git
 
         private bool RetryCancel(ThreadStart work)
         {
-            return AbortRetryIgnore(work, MessageBoxButtons.RetryCancel);
+            return AbortRetryIgnore(work, MessageChoice.OkCancel);
         }
 
         private bool AbortRetryIgnore(ThreadStart work)
         {
-            return AbortRetryIgnore(work, MessageBoxButtons.AbortRetryIgnore);
+            return AbortRetryIgnore(work, MessageChoice.OkCancelIgnore);
         }
 
-        private bool AbortRetryIgnore(ThreadStart work, MessageBoxButtons buttons)
+        private bool AbortRetryIgnore(ThreadStart work, MessageChoice choice)
         {
             bool retry;
             do
@@ -658,19 +629,19 @@ namespace Hpdi.Vss2Git
 
                     message += "\nSee log file for more information.";
 
-                    if (ignoreErrors)
+                    if (IgnoreErrors)
                     {
                         retry = false;
                         continue;
                     }
 
-                    var button = MessageBox.Show(message, "Error", buttons, MessageBoxIcon.Error);
-                    switch (button)
+                    var result = messageDispatcher.Dispatch(MessageType.Error, message, choice);
+                    switch (result)
                     {
-                        case DialogResult.Retry:
+                        case MessageHandleResult.Ok:
                             retry = true;
                             break;
-                        case DialogResult.Ignore:
+                        case MessageHandleResult.Ignore:
                             retry = false;
                             break;
                         default:
@@ -686,15 +657,14 @@ namespace Hpdi.Vss2Git
         private string GetEmail(string user)
         {
             // check user-defined mapping of user names to email addresses
-            string username = user.ToLower();
-            string email;
-            if (emailMap.TryGetValue(username, out email))
+            var username = user.ToLower();
+            if (EmailMap.TryGetValue(username, out var email))
             {
                 if (!email.Contains("@"))
-                    email += "@" + emailDomain;
+                    email += "@" + EmailDomain;
                 return email;
             }
-            return username.Replace(' ', '.') + "@" + emailDomain;
+            return username.Replace(' ', '.') + "@" + EmailDomain;
         }
 
         private string GetTagFromLabel(string label)
@@ -707,7 +677,7 @@ namespace Hpdi.Vss2Git
             // global uniqueness by appending a number; since the file system
             // may be case-insensitive, ignore case when hashing tags
             var tag = baseTag;
-            for (int i = 2; !tagsUsed.Add(tag.ToUpperInvariant()); ++i)
+            for (var i = 2; !tagsUsed.Add(tag.ToUpperInvariant()); ++i)
             {
                 tag = baseTag + "-" + i;
             }
@@ -720,7 +690,7 @@ namespace Hpdi.Vss2Git
         {
             var needCommit = false;
             var paths = pathMapper.GetFilePaths(physicalName, underProject);
-            foreach (string path in paths)
+            foreach (var path in paths)
             {
                 logger.WriteLine("{0}: {1} revision {2}", path, actionType, version);
                 if (WriteRevisionTo(physicalName, version, path))
@@ -764,7 +734,7 @@ namespace Hpdi.Vss2Git
             var createDateTime = item.Created;
             using (var revEnum = item.Revisions.GetEnumerator())
             {
-                if (revEnum.MoveNext())
+                if (revEnum.MoveNext() && revEnum.Current != null)
                 {
                     createDateTime = revEnum.Current.DateTime;
                 }
@@ -790,7 +760,7 @@ namespace Hpdi.Vss2Git
 
         private delegate void RenameDelegate(string sourcePath, string destPath, bool force);
 
-        private void CaseSensitiveRename(string sourcePath, string destPath, RenameDelegate renamer)
+        private static void CaseSensitiveRename(string sourcePath, string destPath, RenameDelegate renamer)
         {
             renamer(sourcePath, destPath, sourcePath.Equals(destPath, StringComparison.OrdinalIgnoreCase));
         }

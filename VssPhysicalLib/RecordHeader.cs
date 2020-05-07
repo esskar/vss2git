@@ -25,26 +25,20 @@ namespace Hpdi.VssPhysicalLib
     {
         public const int LENGTH = 8;
 
-        int offset;
-        int length;
-        string signature;
-        ushort fileCrc;
-        ushort actualCrc;
-
-        public int Offset { get { return offset; } }
-        public int Length { get { return length; } }
-        public string Signature { get { return signature; } }
-        public ushort FileCrc { get { return fileCrc; } }
-        public ushort ActualCrc { get { return actualCrc; } }
-        public bool IsCrcValid { get { return fileCrc == actualCrc; } }
+        public int Offset { get; private set; }
+        public int Length { get; private set; }
+        public string Signature { get; private set; }
+        public ushort FileCrc { get; private set; }
+        public ushort ActualCrc { get; private set; }
+        public bool IsCrcValid { get { return FileCrc == ActualCrc; } }
 
         public void CheckSignature(string expected)
         {
-            if (signature != expected)
+            if (Signature != expected)
             {
                 throw new RecordNotFoundException(string.Format(
                     "Unexpected record signature: expected={0}, actual={1}",
-                    expected, signature));
+                    expected, Signature));
             }
         }
 
@@ -54,24 +48,24 @@ namespace Hpdi.VssPhysicalLib
             {
                 throw new RecordCrcException(this, string.Format(
                     "CRC error in {0} record: expected={1}, actual={2}",
-                    signature, fileCrc, actualCrc));
+                    Signature, FileCrc, ActualCrc));
             }
         }
 
         public void Read(BufferReader reader)
         {
-            offset = reader.Offset;
-            length = reader.ReadInt32();
-            signature = reader.ReadSignature(2);
-            fileCrc = (ushort)reader.ReadInt16();
-            actualCrc = reader.Crc16(length);
+            Offset = reader.Offset;
+            Length = reader.ReadInt32();
+            Signature = reader.ReadSignature(2);
+            FileCrc = (ushort)reader.ReadInt16();
+            ActualCrc = reader.Crc16(Length);
         }
 
         public void Dump(TextWriter writer)
         {
             writer.WriteLine(
                 "Signature: {0} - Length: {1} - Offset: {2:X6} - CRC: {3:X4} ({5}: {4:X4})",
-                signature, length, offset, fileCrc, actualCrc, IsCrcValid ? "valid" : "INVALID");
+                Signature, Length, Offset, FileCrc, ActualCrc, IsCrcValid ? "valid" : "INVALID");
         }
     }
 }

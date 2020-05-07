@@ -31,7 +31,7 @@ namespace Hpdi.VssPhysicalLib
             var result = new LinkedList<DeltaOperation>();
             using (var merger = new DeltaSimulator(lastRevision))
             {
-                foreach (DeltaOperation operation in priorRevision)
+                foreach (var operation in priorRevision)
                 {
                     switch (operation.Command)
                     {
@@ -65,7 +65,7 @@ namespace Hpdi.VssPhysicalLib
         {
             const int COPY_BUFFER_SIZE = 4096;
             byte[] copyBuffer = null;
-            foreach (DeltaOperation operation in operations)
+            foreach (var operation in operations)
             {
                 switch (operation.Command)
                 {
@@ -79,11 +79,11 @@ namespace Hpdi.VssPhysicalLib
                         {
                             copyBuffer = new byte[COPY_BUFFER_SIZE];
                         }
-                        int remaining = operation.Length;
-                        int offset = 0;
+                        var remaining = operation.Length;
+                        var offset = 0;
                         while (remaining > 0)
                         {
-                            int count = input.Read(copyBuffer, offset, remaining);
+                            var count = input.Read(copyBuffer, offset, remaining);
                             if (count <= 0)
                             {
                                 throw new IOException("Unexpected end of current revision file");

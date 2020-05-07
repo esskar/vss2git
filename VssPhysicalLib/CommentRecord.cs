@@ -25,21 +25,19 @@ namespace Hpdi.VssPhysicalLib
     {
         public const string SIGNATURE = "MC";
 
-        string comment;
-
         public override string Signature { get { return SIGNATURE; } }
-        public string Comment { get { return comment; } }
+        public string Comment { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
             base.Read(reader, header);
 
-            comment = reader.ReadString(reader.Remaining);
+            Comment = reader.ReadString(reader.Remaining);
         }
 
         public override void Dump(TextWriter writer)
         {
-            writer.WriteLine("  {0}", comment);
+            writer.WriteLine("  {0}", Comment);
         }
     }
 }

@@ -23,23 +23,15 @@ namespace Hpdi.Vss2Git
     /// <author>Trevor Robinson</author>
     class ProcessExitException : ProcessException
     {
-        private readonly string stdout;
-        public string Stdout
-        {
-            get { return stdout; }
-        }
+        public string Stdout { get; }
 
-        private readonly string stderr;
-        public string Stderr
-        {
-            get { return stderr; }
-        }
+        public string Stderr { get; }
 
         public ProcessExitException(string message, string executable, string arguments, string stdout, string stderr)
             : base(message, executable, arguments)
         {
-            this.stdout = stdout;
-            this.stderr = stderr;
+            this.Stdout = stdout;
+            this.Stderr = stderr;
         }
     }
 }

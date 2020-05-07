@@ -25,51 +25,27 @@ namespace Hpdi.Vss2Git
     /// <author>Trevor Robinson</author>
     class Revision
     {
-        private readonly DateTime dateTime;
-        public DateTime DateTime
-        {
-            get { return dateTime; }
-        }
+        public DateTime DateTime { get; }
 
-        private readonly string user;
-        public string User
-        {
-            get { return user; }
-        }
+        public string User { get; }
 
-        private readonly VssItemName item;
-        public VssItemName Item
-        {
-            get { return item; }
-        } 
+        public VssItemName Item { get; }
 
-        private readonly int version;
-        public int Version
-        {
-            get { return version; }
-        }
+        public int Version { get; }
 
-        private readonly string comment;
-        public string Comment
-        {
-            get { return comment; }
-        }
+        public string Comment { get; }
 
-        private readonly VssAction action;
-        public VssAction Action
-        {
-            get { return action; }
-        }
+        public VssAction Action { get; }
 
         public Revision(DateTime dateTime, string user, VssItemName item,
             int version, string comment, VssAction action)
         {
-            this.dateTime = dateTime;
-            this.user = user;
-            this.item = item;
-            this.version = version;
-            this.comment = comment;
-            this.action = action;
+            this.DateTime = dateTime;
+            this.User = user;
+            this.Item = item;
+            this.Version = version;
+            this.Comment = comment;
+            this.Action = action;
         }
     }
 }

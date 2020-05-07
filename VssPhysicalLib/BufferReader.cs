@@ -27,7 +27,6 @@ namespace Hpdi.VssPhysicalLib
     {
         private readonly Encoding encoding;
         private readonly byte[] data;
-        private int offset;
         private int limit;
 
         public BufferReader(Encoding encoding, byte[] data)
@@ -39,25 +38,21 @@ namespace Hpdi.VssPhysicalLib
         {
             this.encoding = encoding;
             this.data = data;
-            this.offset = offset;
+            this.Offset = offset;
             this.limit = limit;
         }
 
-        public int Offset
-        {
-            get { return offset; }
-            set { offset = value; }
-        }
+        public int Offset { get; set; }
 
         public int Remaining
         {
-            get { return limit - offset; }
+            get { return limit - Offset; }
         }
 
         public ushort Checksum16()
         {
             ushort sum = 0;
-            for (int i = offset; i < limit; ++i)
+            for (var i = Offset; i < limit; ++i)
             {
                 sum += data[i];
             }
@@ -68,32 +63,32 @@ namespace Hpdi.VssPhysicalLib
 
         public ushort Crc16()
         {
-            return crc16.Compute(data, offset, limit);
+            return crc16.Compute(data, Offset, limit);
         }
 
         public ushort Crc16(int bytes)
         {
             CheckRead(bytes);
-            return crc16.Compute(data, offset, offset + bytes);
+            return crc16.Compute(data, Offset, Offset + bytes);
         }
 
         public void Skip(int bytes)
         {
             CheckRead(bytes);
-            offset += bytes;
+            Offset += bytes;
         }
 
         public short ReadInt16()
         {
             CheckRead(2);
-            return (short)(data[offset++] | (data[offset++] << 8));
+            return (short)(data[Offset++] | (data[Offset++] << 8));
         }
 
         public int ReadInt32()
         {
             CheckRead(4);
-            return data[offset++] | (data[offset++] << 8) |
-                (data[offset++] << 16) | (data[offset++] << 24);
+            return data[Offset++] | (data[Offset++] << 8) |
+                (data[Offset++] << 16) | (data[Offset++] << 24);
         }
 
         private static readonly DateTime EPOCH =
@@ -107,10 +102,10 @@ namespace Hpdi.VssPhysicalLib
         public string ReadSignature(int length)
         {
             CheckRead(length);
-            StringBuilder buf = new StringBuilder(length);
-            for (int i = 0; i < length; ++i)
+            var buf = new StringBuilder(length);
+            for (var i = 0; i < length; ++i)
             {
-                buf.Append((char)data[offset++]);
+                buf.Append((char)data[Offset++]);
             }
             return buf.ToString();
         }
@@ -125,16 +120,16 @@ namespace Hpdi.VssPhysicalLib
         {
             CheckRead(fieldSize);
 
-            int count = 0;
-            for (int i = 0; i < fieldSize; ++i)
+            var count = 0;
+            for (var i = 0; i < fieldSize; ++i)
             {
-                if (data[offset + i] == 0) break;
+                if (data[Offset + i] == 0) break;
                 ++count;
             }
 
-            var str = encoding.GetString(data, offset, count);
+            var str = encoding.GetString(data, Offset, count);
 
-            offset += fieldSize;
+            Offset += fieldSize;
 
             return str;
         }
@@ -143,29 +138,29 @@ namespace Hpdi.VssPhysicalLib
         {
             CheckRead(bytes);
             var result = FormatBytes(bytes);
-            offset += bytes;
+            Offset += bytes;
             return result;
         }
 
         public BufferReader Extract(int bytes)
         {
             CheckRead(bytes);
-            return new BufferReader(encoding, data, offset, offset += bytes);
+            return new BufferReader(encoding, data, Offset, Offset += bytes);
         }
 
         public ArraySegment<byte> GetBytes(int bytes)
         {
             CheckRead(bytes);
-            var result = new ArraySegment<byte>(data, offset, bytes);
-            offset += bytes;
+            var result = new ArraySegment<byte>(data, Offset, bytes);
+            Offset += bytes;
             return result;
         }
 
         public string FormatBytes(int bytes)
         {
-            var formatLimit = Math.Min(limit, offset + bytes);
-            StringBuilder buf = new StringBuilder((formatLimit - offset) * 3);
-            for (int i = offset; i < formatLimit; ++i)
+            var formatLimit = Math.Min(limit, Offset + bytes);
+            var buf = new StringBuilder((formatLimit - Offset) * 3);
+            for (var i = Offset; i < formatLimit; ++i)
             {
                 buf.AppendFormat("{0:X2} ", data[i]);
             }
@@ -179,7 +174,7 @@ namespace Hpdi.VssPhysicalLib
 
         private void CheckRead(int bytes)
         {
-            if (offset + bytes > limit)
+            if (Offset + bytes > limit)
             {
                 throw new EndOfBufferException(string.Format(
                     "Attempted read of {0} bytes with only {1} bytes remaining in buffer",

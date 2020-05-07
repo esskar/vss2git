@@ -28,30 +28,16 @@ namespace Hpdi.Vss2Git
     /// <author>Trevor Robinson</author>
     class VssItemInfo
     {
-        private readonly string physicalName;
-        public string PhysicalName
-        {
-            get { return physicalName; }
-        }
+        public string PhysicalName { get; }
 
-        private string logicalName;
-        public string LogicalName
-        {
-            get { return logicalName; }
-            set { logicalName = value; }
-        }
+        public string LogicalName { get; set; }
 
-        private bool destroyed;
-        public bool Destroyed
-        {
-            get { return destroyed; }
-            set { destroyed = value; }
-        }
+        public bool Destroyed { get; set; }
 
         public VssItemInfo(string physicalName, string logicalName)
         {
-            this.physicalName = physicalName;
-            this.logicalName = logicalName;
+            this.PhysicalName = physicalName;
+            this.LogicalName = logicalName;
         }
     }
 
@@ -82,20 +68,10 @@ namespace Hpdi.Vss2Git
             }
         }
 
-        private bool isRoot;
-        public bool IsRoot
-        {
-            get { return isRoot; }
-            set { isRoot = value; }
-        }
+        public bool IsRoot { get; set; }
 
         // valid only for root paths; used to resolve project specifiers
-        private string originalVssPath;
-        public string OriginalVssPath
-        {
-            get { return originalVssPath; }
-            set { originalVssPath = value; }
-        }
+        public string OriginalVssPath { get; set; }
 
         public bool IsRooted
         {
@@ -106,7 +82,7 @@ namespace Hpdi.Vss2Git
                 {
                     project = project.parentInfo;
                 }
-                return project.isRoot;
+                return project.IsRoot;
             }
         }
 
@@ -181,8 +157,7 @@ namespace Hpdi.Vss2Git
             {
                 foreach (var item in project.items)
                 {
-                    var subproject = item as VssProjectInfo;
-                    if (subproject != null)
+                    if (item is VssProjectInfo subproject)
                     {
                         subprojects.AddLast(subproject);
                     }
@@ -212,8 +187,7 @@ namespace Hpdi.Vss2Git
             {
                 foreach (var item in project.items)
                 {
-                    var subproject = item as VssProjectInfo;
-                    if (subproject != null)
+                    if (item is VssProjectInfo subproject)
                     {
                         subprojects.AddLast(subproject);
                     }
@@ -242,8 +216,7 @@ namespace Hpdi.Vss2Git
             {
                 foreach (var item in project.items)
                 {
-                    var subproject = item as VssProjectInfo;
-                    if (subproject != null)
+                    if (item is VssProjectInfo subproject)
                     {
                         subprojects.AddLast(subproject);
                         yield return subproject;
@@ -274,12 +247,7 @@ namespace Hpdi.Vss2Git
             get { return projects; }
         }
 
-        private int version = 1;
-        public int Version
-        {
-            get { return version; }
-            set { version = value; }
-        }
+        public int Version { get; set; } = 1;
 
         public VssFileInfo(string physicalName, string logicalName)
             : base(physicalName, logicalName)
@@ -396,7 +364,7 @@ namespace Hpdi.Vss2Git
 
         public void SetFileVersion(VssItemName name, int version)
         {
-            VssFileInfo fileInfo = GetOrCreateFile(name);
+            var fileInfo = GetOrCreateFile(name);
             fileInfo.Version = version;
         }
 
@@ -605,8 +573,7 @@ namespace Hpdi.Vss2Git
                         var found = false;
                         foreach (var item in projectInfo.Items)
                         {
-                            var subprojectInfo = item as VssProjectInfo;
-                            if (subprojectInfo != null && subprojectInfo.LogicalName == subprojectName)
+                            if (item is VssProjectInfo subprojectInfo && subprojectInfo.LogicalName == subprojectName)
                             {
                                 projectInfo = subprojectInfo;
                                 found = true;

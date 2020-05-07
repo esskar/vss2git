@@ -27,7 +27,7 @@ namespace Hpdi.HashTest
     {
         static void Main(string[] args)
         {
-            byte[] data = Encoding.ASCII.GetBytes("123456789");
+            var data = Encoding.ASCII.GetBytes("123456789");
 
             var crc16 = new Crc16(Crc16.IBM, true);
             Console.WriteLine("CRC-16 = {0:X4}", crc16.Compute(data));

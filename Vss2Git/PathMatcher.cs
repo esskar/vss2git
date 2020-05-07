@@ -72,9 +72,9 @@ namespace Hpdi.Vss2Git
 
         private static void ConvertPatternInto(string glob, StringBuilder buf)
         {
-            for (int i = 0; i < glob.Length; ++i)
+            for (var i = 0; i < glob.Length; ++i)
             {
-                char c = glob[i];
+                var c = glob[i];
                 switch (c)
                 {
                     case '.':

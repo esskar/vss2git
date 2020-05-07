@@ -58,20 +58,16 @@ namespace Hpdi.VssLogicalLib
     {
         public override VssActionType Type { get { return VssActionType.Label; } }
 
-        private readonly string label;
-        public string Label
-        {
-            get { return label; }
-        }
+        public string Label { get; }
 
         public VssLabelAction(string label)
         {
-            this.label = label;
+            this.Label = label;
         }
 
         public override string ToString()
         {
-            return "Label " + label;
+            return "Label " + Label;
         }
     }
 
@@ -196,21 +192,17 @@ namespace Hpdi.VssLogicalLib
     {
         public override VssActionType Type { get { return VssActionType.Rename; } }
 
-        private readonly string originalName;
-        public string OriginalName
-        {
-            get { return originalName; }
-        }
+        public string OriginalName { get; }
 
         public VssRenameAction(VssItemName name, string originalName)
             : base(name)
         {
-            this.originalName = originalName;
+            this.OriginalName = originalName;
         }
 
         public override string ToString()
         {
-            return string.Format("Rename {0} to {1}", originalName, Name);
+            return string.Format("Rename {0} to {1}", OriginalName, Name);
         }
     }
 
@@ -222,21 +214,17 @@ namespace Hpdi.VssLogicalLib
     {
         public override VssActionType Type { get { return VssActionType.MoveFrom; } }
 
-        private readonly string originalProject;
-        public string OriginalProject
-        {
-            get { return originalProject; }
-        }
+        public string OriginalProject { get; }
 
         public VssMoveFromAction(VssItemName name, string originalProject)
             : base(name)
         {
-            this.originalProject = originalProject;
+            this.OriginalProject = originalProject;
         }
 
         public override string ToString()
         {
-            return string.Format("Move {0} from {1}", Name, originalProject);
+            return string.Format("Move {0} from {1}", Name, OriginalProject);
         }
     }
 
@@ -248,21 +236,17 @@ namespace Hpdi.VssLogicalLib
     {
         public override VssActionType Type { get { return VssActionType.MoveTo; } }
 
-        private readonly string newProject;
-        public string NewProject
-        {
-            get { return newProject; }
-        }
+        public string NewProject { get; }
 
         public VssMoveToAction(VssItemName name, string newProject)
             : base(name)
         {
-            this.newProject = newProject;
+            this.NewProject = newProject;
         }
 
         public override string ToString()
         {
-            return string.Format("Move {0} to {1}", Name, newProject);
+            return string.Format("Move {0} to {1}", Name, NewProject);
         }
     }
 
@@ -274,21 +258,17 @@ namespace Hpdi.VssLogicalLib
     {
         public override VssActionType Type { get { return VssActionType.Share; } }
 
-        private readonly string originalProject;
-        public string OriginalProject
-        {
-            get { return originalProject; }
-        }
+        public string OriginalProject { get; }
 
         public VssShareAction(VssItemName name, string originalProject)
             : base(name)
         {
-            this.originalProject = originalProject;
+            this.OriginalProject = originalProject;
         }
 
         public override string ToString()
         {
-            return string.Format("Share {0} from {1}", Name, originalProject);
+            return string.Format("Share {0} from {1}", Name, OriginalProject);
         }
     }
 
@@ -300,28 +280,20 @@ namespace Hpdi.VssLogicalLib
     {
         public override VssActionType Type { get { return VssActionType.Pin; } }
 
-        private readonly bool pinned;
-        public bool Pinned
-        {
-            get { return pinned; }
-        }
+        public bool Pinned { get; }
 
-        private readonly int revision;
-        public int Revision
-        {
-            get { return revision; }
-        }
+        public int Revision { get; }
 
         public VssPinAction(VssItemName name, bool pinned, int revision)
             : base(name)
         {
-            this.pinned = pinned;
-            this.revision = revision;
+            this.Pinned = pinned;
+            this.Revision = revision;
         }
 
         public override string ToString()
         {
-            return string.Format("{0} {1} at revision {2}", pinned ? "Pin " : "Unpin ", Name, revision);
+            return string.Format("{0} {1} at revision {2}", Pinned ? "Pin " : "Unpin ", Name, Revision);
         }
     }
 
@@ -333,21 +305,17 @@ namespace Hpdi.VssLogicalLib
     {
         public override VssActionType Type { get { return VssActionType.Branch; } }
 
-        private readonly VssItemName source;
-        public VssItemName Source
-        {
-            get { return source; }
-        }
+        public VssItemName Source { get; }
 
         public VssBranchAction(VssItemName name, VssItemName source)
             : base(name)
         {
-            this.source = source;
+            this.Source = source;
         }
 
         public override string ToString()
         {
-            return string.Format("Branch {0} from {1}", Name, source.PhysicalName);
+            return string.Format("Branch {0} from {1}", Name, Source.PhysicalName);
         }
     }
 
@@ -359,20 +327,16 @@ namespace Hpdi.VssLogicalLib
     {
         public override VssActionType Type { get { return VssActionType.Edit; } }
 
-        private readonly string physicalName;
-        public string PhysicalName
-        {
-            get { return physicalName; }
-        }
+        public string PhysicalName { get; }
 
         public VssEditAction(string physicalName)
         {
-            this.physicalName = physicalName;
+            this.PhysicalName = physicalName;
         }
 
         public override string ToString()
         {
-            return "Edit " + physicalName;
+            return "Edit " + PhysicalName;
         }
     }
 
@@ -384,21 +348,17 @@ namespace Hpdi.VssLogicalLib
     {
         public override VssActionType Type { get { return VssActionType.Archive; } }
 
-        private readonly string archivePath;
-        public string ArchivePath
-        {
-            get { return archivePath; }
-        }
+        public string ArchivePath { get; }
 
         public VssArchiveAction(VssItemName name, string archivePath)
             : base(name)
         {
-            this.archivePath = archivePath;
+            this.ArchivePath = archivePath;
         }
 
         public override string ToString()
         {
-            return string.Format("Archive {0} to {1}", Name, archivePath);
+            return string.Format("Archive {0} to {1}", Name, ArchivePath);
         }
     }
 
@@ -410,21 +370,17 @@ namespace Hpdi.VssLogicalLib
     {
         public override VssActionType Type { get { return VssActionType.Restore; } }
 
-        private readonly string archivePath;
-        public string ArchivePath
-        {
-            get { return archivePath; }
-        }
+        public string ArchivePath { get; }
 
         public VssRestoreAction(VssItemName name, string archivePath)
             : base(name)
         {
-            this.archivePath = archivePath;
+            this.ArchivePath = archivePath;
         }
 
         public override string ToString()
         {
-            return string.Format("Restore {0} from archive {1}", Name, archivePath);
+            return string.Format("Restore {0} from archive {1}", Name, ArchivePath);
         }
     }
 }

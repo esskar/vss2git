@@ -23,30 +23,22 @@ namespace Hpdi.Vss2Git
     /// <author>Trevor Robinson</author>
     class ProcessException : Exception
     {
-        private readonly string executable;
-        public string Executable
-        {
-            get { return executable; }
-        }
+        public string Executable { get; }
 
-        private readonly string arguments;
-        public string Arguments
-        {
-            get { return arguments; }
-        }
+        public string Arguments { get; }
 
         public ProcessException(string message, string executable, string arguments)
             : base(message)
         {
-            this.executable = executable;
-            this.arguments = arguments;
+            this.Executable = executable;
+            this.Arguments = arguments;
         }
 
         public ProcessException(string message, Exception innerException, string executable, string arguments)
             : base(message, innerException)
         {
-            this.executable = executable;
-            this.arguments = arguments;
+            this.Executable = executable;
+            this.Arguments = arguments;
         }
     }
 }

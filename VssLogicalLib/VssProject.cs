@@ -26,12 +26,7 @@ namespace Hpdi.VssLogicalLib
     /// <author>Trevor Robinson</author>
     public class VssProject : VssItem
     {
-        private readonly string logicalPath;
-
-        public string Path
-        {
-            get { return logicalPath; }
-        }
+        public string Path { get; }
 
         public IEnumerable<VssProject> Projects
         {
@@ -55,7 +50,7 @@ namespace Hpdi.VssLogicalLib
 
         public VssProject FindProject(string name)
         {
-            foreach (VssProject subproject in Projects)
+            foreach (var subproject in Projects)
             {
                 if (name == subproject.Name)
                 {
@@ -67,7 +62,7 @@ namespace Hpdi.VssLogicalLib
 
         public VssFile FindFile(string name)
         {
-            foreach (VssFile file in Files)
+            foreach (var file in Files)
             {
                 if (name == file.Name)
                 {
@@ -91,7 +86,7 @@ namespace Hpdi.VssLogicalLib
             string physicalPath, string logicalPath)
             : base(database, itemName, physicalPath)
         {
-            this.logicalPath = logicalPath;
+            this.Path = logicalPath;
         }
 
         protected override VssRevision CreateRevision(RevisionRecord revision, CommentRecord comment)

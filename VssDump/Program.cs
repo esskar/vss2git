@@ -128,11 +128,11 @@ namespace Hpdi.VssDump
             Console.WriteLine();
 
             Console.WriteLine("Log file contents:");
-            for (char c = 'a'; c <= 'z'; ++c)
+            for (var c = 'a'; c <= 'z'; ++c)
             {
-                string[] dataPaths = Directory.GetFiles(
+                var dataPaths = Directory.GetFiles(
                     Path.Combine(db.DataPath, c.ToString()), "*.");
-                foreach (string dataPath in dataPaths)
+                foreach (var dataPath in dataPaths)
                 {
                     var dataFile = Path.GetFileName(dataPath).ToUpper();
                     var orphaned = !tree.PhysicalNames.Contains(dataFile);
@@ -159,7 +159,7 @@ namespace Hpdi.VssDump
 
         private static string FormatCollection(IEnumerable collection)
         {
-            StringBuilder buf = new StringBuilder();
+            var buf = new StringBuilder();
             foreach (var item in collection)
             {
                 if (buf.Length > 0)
@@ -183,8 +183,7 @@ namespace Hpdi.VssDump
                 {
                     record.Header.Dump(Console.Out);
                     record.Dump(Console.Out);
-                    var revision = record as RevisionRecord;
-                    if (revision != null)
+                    if (record is RevisionRecord revision)
                     {
                         if (itemFile.Header.ItemType == ItemType.Project)
                         {

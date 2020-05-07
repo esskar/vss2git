@@ -21,45 +21,32 @@ namespace Hpdi.VssLogicalLib
     /// <author>Trevor Robinson</author>
     public class VssItemName
     {
-        private readonly string logicalName;
-        private readonly string physicalName;
-        private readonly bool isProject;
-
         /// <summary>
         /// The current logical name of the item.
         /// Note that the logical name can change over the history of the item.
         /// </summary>
-        public string LogicalName
-        {
-            get { return logicalName; }
-        }
+        public string LogicalName { get; }
 
         /// <summary>
         /// The physical name of the item (e.g. AAAAAAAA). This name never changes.
         /// </summary>
-        public string PhysicalName
-        {
-            get { return physicalName; }
-        }
+        public string PhysicalName { get; }
 
         /// <summary>
         /// Indicates whether this item is a project or a file.
         /// </summary>
-        public bool IsProject
-        {
-            get { return isProject; }
-        }
+        public bool IsProject { get; }
 
         internal VssItemName(string logicalName, string physicalName, bool isProject)
         {
-            this.logicalName = logicalName;
-            this.physicalName = physicalName;
-            this.isProject = isProject;
+            this.LogicalName = logicalName;
+            this.PhysicalName = physicalName;
+            this.IsProject = isProject;
         }
 
         public override string ToString()
         {
-            return (isProject ? "$" : "") + logicalName + "(" + physicalName + ")";
+            return (IsProject ? "$" : "") + LogicalName + "(" + PhysicalName + ")";
         }
     }
 }

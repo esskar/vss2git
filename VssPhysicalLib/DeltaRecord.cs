@@ -38,7 +38,7 @@ namespace Hpdi.VssPhysicalLib
 
             for (; ; )
             {
-                DeltaOperation operation = new DeltaOperation();
+                var operation = new DeltaOperation();
                 operation.Read(reader);
                 if (operation.Command == DeltaCommand.Stop) break;
                 operations.AddLast(operation);
@@ -47,7 +47,7 @@ namespace Hpdi.VssPhysicalLib
 
         public override void Dump(TextWriter writer)
         {
-            foreach (DeltaOperation operation in operations)
+            foreach (var operation in operations)
             {
                 operation.Dump(writer);
             }

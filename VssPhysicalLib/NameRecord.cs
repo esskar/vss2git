@@ -37,16 +37,15 @@ namespace Hpdi.VssPhysicalLib
     {
         public const string SIGNATURE = "SN";
 
-        int kindCount;
         NameKind[] kinds;
         string[] names;
 
         public override string Signature { get { return SIGNATURE; } }
-        public int KindCount { get { return kindCount; } }
+        public int KindCount { get; private set; }
 
         public int IndexOf(NameKind kind)
         {
-            for (int i = 0; i < kindCount; ++i)
+            for (var i = 0; i < KindCount; ++i)
             {
                 if (kinds[i] == kind)
                 {
@@ -70,12 +69,12 @@ namespace Hpdi.VssPhysicalLib
         {
             base.Read(reader, header);
             
-            kindCount = reader.ReadInt16();
+            KindCount = reader.ReadInt16();
             reader.Skip(2); // unknown
-            kinds = new NameKind[kindCount];
-            names = new string[kindCount];
-            var baseOffset = reader.Offset + (kindCount * 4);
-            for (int i = 0; i < kindCount; ++i)
+            kinds = new NameKind[KindCount];
+            names = new string[KindCount];
+            var baseOffset = reader.Offset + (KindCount * 4);
+            for (var i = 0; i < KindCount; ++i)
             {
                 kinds[i] = (NameKind)reader.ReadInt16();
                 var nameOffset = reader.ReadInt16();
@@ -94,7 +93,7 @@ namespace Hpdi.VssPhysicalLib
 
         public override void Dump(TextWriter writer)
         {
-            for (int i = 0; i < kindCount; ++i)
+            for (var i = 0; i < KindCount; ++i)
             {
                 writer.WriteLine("  {0} name: {1}", kinds[i], names[i]);
             }

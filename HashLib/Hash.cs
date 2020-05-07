@@ -55,7 +55,7 @@ namespace Hpdi.HashLib
 
         public ushort Compute(byte[] bytes, int offset, int limit)
         {
-            uint value32 = hash32.Compute(bytes, offset, limit);
+            var value32 = hash32.Compute(bytes, offset, limit);
             return (ushort)(value32 ^ (value32 >> 16));
         }
     }

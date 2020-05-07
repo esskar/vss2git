@@ -27,23 +27,15 @@ namespace Hpdi.VssPhysicalLib
             get { return (flags & 1) != 0; }
         }
 
-        private readonly string shortName;
-        public string ShortName
-        {
-            get { return shortName; }
-        }
+        public string ShortName { get; }
 
-        private readonly int nameFileOffset;
-        public int NameFileOffset
-        {
-            get { return nameFileOffset; }
-        }
+        public int NameFileOffset { get; }
 
         public VssName(short flags, string shortName, int nameFileOffset)
         {
             this.flags = flags;
-            this.shortName = shortName;
-            this.nameFileOffset = nameFileOffset;
+            this.ShortName = shortName;
+            this.NameFileOffset = nameFileOffset;
         }
     }
 }

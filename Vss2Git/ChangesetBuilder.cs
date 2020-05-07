@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Hpdi.VssLogicalLib;
+using VssContracts;
 
 namespace Hpdi.Vss2Git
 {
@@ -30,29 +31,15 @@ namespace Hpdi.Vss2Git
     {
         private readonly RevisionAnalyzer revisionAnalyzer;
 
-        private readonly LinkedList<Changeset> changesets = new LinkedList<Changeset>();
-        public LinkedList<Changeset> Changesets
-        {
-            get { return changesets; }
-        }
+        public LinkedList<Changeset> Changesets { get; } = new LinkedList<Changeset>();
 
-        private TimeSpan anyCommentThreshold = TimeSpan.FromSeconds(30);
-        public TimeSpan AnyCommentThreshold
-        {
-            get { return anyCommentThreshold; }
-            set { anyCommentThreshold = value; }
-        }
+        public TimeSpan AnyCommentThreshold { get; set; } = TimeSpan.FromSeconds(30);
 
 
-        private TimeSpan sameCommentThreshold = TimeSpan.FromMinutes(10);
-        public TimeSpan SameCommentThreshold
-        {
-            get { return sameCommentThreshold; }
-            set { sameCommentThreshold = value; }
-        }
+        public TimeSpan SameCommentThreshold { get; set; } = TimeSpan.FromMinutes(10);
 
-        public ChangesetBuilder(WorkQueue workQueue, Logger logger, RevisionAnalyzer revisionAnalyzer)
-            : base(workQueue, logger)
+        public ChangesetBuilder(WorkQueue workQueue, Logger logger, RevisionAnalyzer revisionAnalyzer, IMessageDispatcher messageDispatcher)
+            : base(workQueue, logger, messageDispatcher)
         {
             this.revisionAnalyzer = revisionAnalyzer;
         }
@@ -68,8 +55,7 @@ namespace Hpdi.Vss2Git
                 var pendingChangesByUser = new Dictionary<string, Changeset>();
                 foreach (var dateEntry in revisionAnalyzer.SortedRevisions)
                 {
-                    var dateTime = dateEntry.Key;
-                    foreach (Revision revision in dateEntry.Value)
+                    foreach (var revision in dateEntry.Value)
                     {
                         // determine target of project revisions
                         var actionType = revision.Action.Type;
@@ -102,12 +88,12 @@ namespace Hpdi.Vss2Git
                             // flush change if file conflict or past time threshold
                             var flush = false;
                             var timeDiff = revision.DateTime - change.DateTime;
-                            if (timeDiff > anyCommentThreshold)
+                            if (timeDiff > AnyCommentThreshold)
                             {
                                 if (HasSameComment(revision, change.Revisions.Last.Value))
                                 {
                                     string message;
-                                    if (timeDiff < sameCommentThreshold)
+                                    if (timeDiff < SameCommentThreshold)
                                     {
                                         message = "Using same-comment threshold";
                                     }
@@ -147,7 +133,7 @@ namespace Hpdi.Vss2Git
                         }
                         if (flushedUsers != null)
                         {
-                            foreach (string user in flushedUsers)
+                            foreach (var user in flushedUsers)
                             {
                                 pendingChangesByUser.Remove(user);
                             }
@@ -156,8 +142,7 @@ namespace Hpdi.Vss2Git
                         // if no pending change for user, create a new one
                         if (pendingChange == null)
                         {
-                            pendingChange = new Changeset();
-                            pendingChange.User = pendingUser;
+                            pendingChange = new Changeset {User = pendingUser};
                             pendingChangesByUser[pendingUser] = pendingChange;
                         }
 
@@ -202,7 +187,7 @@ namespace Hpdi.Vss2Git
 
                 logger.WriteSectionSeparator();
                 logger.WriteLine("Found {0} changesets in {1:HH:mm:ss}",
-                    changesets.Count, new DateTime(stopwatch.ElapsedTicks));
+                    Changesets.Count, new DateTime(stopwatch.ElapsedTicks));
             });
         }
 
@@ -213,8 +198,8 @@ namespace Hpdi.Vss2Git
 
         private void AddChangeset(Changeset change)
         {
-            changesets.AddLast(change);
-            int changesetId = changesets.Count;
+            Changesets.AddLast(change);
+            var changesetId = Changesets.Count;
             DumpChangeset(change, changesetId);
         }
 

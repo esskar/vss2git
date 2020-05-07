@@ -58,10 +58,10 @@ namespace Hpdi.HashLib
         protected static uint[] GenerateTable(uint poly)
         {
             var table = new uint[256];
-            for (int i = 0; i < table.Length; ++i)
+            for (var i = 0; i < table.Length; ++i)
             {
                 var value = (uint)i;
-                for (int j = 0; j < 8; ++j)
+                for (var j = 0; j < 8; ++j)
                 {
                     var xor = (value & 1) != 0;
                     value >>= 1;

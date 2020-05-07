@@ -54,7 +54,7 @@ namespace Hpdi.Vss2Git
 
                 WriteSettings();
 
-                Encoding encoding = Encoding.Default;
+                var encoding = Encoding.Default;
                 EncodingInfo encodingInfo;
                 if (codePages.TryGetValue(encodingComboBox.SelectedIndex, out encodingInfo))
                 {
@@ -85,30 +85,33 @@ namespace Hpdi.Vss2Git
                     return;
                 }
 
-                var project = item as VssProject;
-                if (project == null)
+                if (!(item is VssProject project))
                 {
                     MessageBox.Show(path + " is not a project", "Invalid project path",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
-                revisionAnalyzer = new RevisionAnalyzer(workQueue, logger, db);
+                var messageBoxDispatcher = new MessageBoxDispatcher();
+
+                revisionAnalyzer = new RevisionAnalyzer(workQueue, logger, db, messageBoxDispatcher);
                 if (!string.IsNullOrEmpty(excludeTextBox.Text))
                 {
                     revisionAnalyzer.ExcludeFiles = excludeTextBox.Text;
                 }
                 revisionAnalyzer.AddItem(project);
 
-                changesetBuilder = new ChangesetBuilder(workQueue, logger, revisionAnalyzer);
-                changesetBuilder.AnyCommentThreshold = TimeSpan.FromSeconds((double)anyCommentUpDown.Value);
-                changesetBuilder.SameCommentThreshold = TimeSpan.FromSeconds((double)sameCommentUpDown.Value);
+                changesetBuilder = new ChangesetBuilder(workQueue, logger, revisionAnalyzer, messageBoxDispatcher)
+                {
+                    AnyCommentThreshold = TimeSpan.FromSeconds((double) anyCommentUpDown.Value),
+                    SameCommentThreshold = TimeSpan.FromSeconds((double) sameCommentUpDown.Value)
+                };
                 changesetBuilder.BuildChangesets();
 
                 if (!string.IsNullOrEmpty(outDirTextBox.Text))
                 {
                     var gitExporter = new GitExporter(workQueue, logger,
-                        revisionAnalyzer, changesetBuilder);
+                        revisionAnalyzer, changesetBuilder, messageBoxDispatcher);
                     if (!string.IsNullOrEmpty(domainTextBox.Text))
                     {
                         gitExporter.EmailDomain = domainTextBox.Text;
@@ -210,7 +213,7 @@ namespace Hpdi.Vss2Git
             foreach (var encoding in encodings)
             {
                 var codePage = encoding.CodePage;
-                description = string.Format("CP{0} - {1}", codePage, encoding.DisplayName);
+                description = $"CP{codePage} - {encoding.DisplayName}";
                 var index = encodingComboBox.Items.Add(description);
                 codePages[index] = encoding;
                 if (codePage == defaultCodePage)

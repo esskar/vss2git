@@ -31,44 +31,24 @@ namespace Hpdi.VssLogicalLib
         public const char ProjectSeparatorChar = '/';
         public const string ProjectSeparator = "/";
 
-        private readonly string basePath;
-        private readonly string iniPath;
-        private readonly string dataPath;
         private readonly NameFile nameFile;
-        private readonly VssProject rootProject;
-        private readonly Encoding encoding;
 
-        public string BasePath
-        {
-            get { return basePath; }
-        }
+        public string BasePath { get; }
 
-        public string IniPath
-        {
-            get { return iniPath; }
-        }
+        public string IniPath { get; }
 
-        public string DataPath
-        {
-            get { return dataPath; }
-        }
+        public string DataPath { get; }
 
-        public VssProject RootProject
-        {
-            get { return rootProject; }
-        }
+        public VssProject RootProject { get; }
 
-        public Encoding Encoding
-        {
-            get { return encoding; }
-        }
+        public Encoding Encoding { get; }
 
         public VssItem GetItem(string logicalPath)
         {
             var segments = logicalPath.Split(new char[] { ProjectSeparatorChar },
                 StringSplitOptions.RemoveEmptyEntries);
             var index = segments[0] == RootProjectName ? 1 : 0;
-            VssProject project = rootProject;
+            var project = RootProject;
             while (index < segments.Length)
             {
                 var name = segments[index++];
@@ -105,11 +85,11 @@ namespace Hpdi.VssLogicalLib
 
             if (physicalName == RootProjectFile)
             {
-                return rootProject;
+                return RootProject;
             }
 
             var physicalPath = GetDataPath(physicalName);
-            var itemFile = new ItemFile(physicalPath, encoding);
+            var itemFile = new ItemFile(physicalPath, Encoding);
             var isProject = (itemFile.Header.ItemType == ItemType.Project);
             var logicalName = GetFullName(itemFile.Header.Name);
             var itemName = new VssItemName(logicalName, physicalName, isProject);
@@ -137,19 +117,19 @@ namespace Hpdi.VssLogicalLib
 
         internal VssDatabase(string path, Encoding encoding)
         {
-            this.basePath = path;
-            this.encoding = encoding;
+            this.BasePath = path;
+            this.Encoding = encoding;
 
-            iniPath = Path.Combine(path, "srcsafe.ini");
-            var iniReader = new SimpleIniReader(iniPath);
+            IniPath = Path.Combine(path, "srcsafe.ini");
+            var iniReader = new SimpleIniReader(IniPath);
             iniReader.Parse();
 
-            dataPath = Path.Combine(path, iniReader.GetValue("Data_Path", "data"));
+            DataPath = Path.Combine(path, iniReader.GetValue("Data_Path", "data"));
 
-            var namesPath = Path.Combine(dataPath, "names.dat");
+            var namesPath = Path.Combine(DataPath, "names.dat");
             nameFile = new NameFile(namesPath, encoding);
 
-            rootProject = OpenProject(null, RootProjectFile, RootProjectName);
+            RootProject = OpenProject(null, RootProjectFile, RootProjectName);
         }
 
         internal VssProject OpenProject(VssProject parent, string physicalName, string logicalName)
@@ -174,7 +154,7 @@ namespace Hpdi.VssLogicalLib
 
         internal string GetDataPath(string physicalName)
         {
-            return Path.Combine(Path.Combine(dataPath, physicalName.Substring(0, 1)), physicalName);
+            return Path.Combine(Path.Combine(DataPath, physicalName.Substring(0, 1)), physicalName);
         }
 
         internal string GetFullName(VssName name)

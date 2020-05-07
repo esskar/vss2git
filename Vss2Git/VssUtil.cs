@@ -37,24 +37,24 @@ namespace Hpdi.Vss2Git
         {
             if (projectCallback != null)
             {
-                RecursionStatus status = projectCallback(project);
+                var status = projectCallback(project);
                 if (status != RecursionStatus.Continue)
                 {
                     return status;
                 }
             }
-            foreach (VssProject subproject in project.Projects)
+            foreach (var subproject in project.Projects)
             {
-                RecursionStatus status = RecurseItems(
+                var status = RecurseItems(
                     subproject, projectCallback, fileCallback);
                 if (status == RecursionStatus.Abort)
                 {
                     return status;
                 }
             }
-            foreach (VssFile file in project.Files)
+            foreach (var file in project.Files)
             {
-                RecursionStatus status = fileCallback(project, file);
+                var status = fileCallback(project, file);
                 if (status == RecursionStatus.Abort)
                 {
                     return status;

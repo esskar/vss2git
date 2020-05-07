@@ -27,25 +27,17 @@ namespace Hpdi.VssPhysicalLib
     /// <author>Trevor Robinson</author>
     class DeltaSimulator : IDisposable
     {
-        private readonly IEnumerable<DeltaOperation> operations;
         private IEnumerator<DeltaOperation> enumerator;
         private int operationOffset;
-        private int fileOffset;
         private bool eof;
 
-        public IEnumerable<DeltaOperation> Operations
-        {
-            get { return operations; }
-        } 
+        public IEnumerable<DeltaOperation> Operations { get; }
 
-        public int Offset
-        {
-            get { return fileOffset; }
-        }
+        public int Offset { get; private set; }
 
         public DeltaSimulator(IEnumerable<DeltaOperation> operations)
         {
-            this.operations = operations;
+            this.Operations = operations;
             Reset();
         }
 
@@ -60,24 +52,24 @@ namespace Hpdi.VssPhysicalLib
 
         public void Seek(int offset)
         {
-            if (offset != fileOffset)
+            if (offset != Offset)
             {
-                if (offset < fileOffset)
+                if (offset < Offset)
                 {
                     Reset();
                 }
-                while (fileOffset < offset && !eof)
+                while (Offset < offset && !eof)
                 {
-                    var seekRemaining = offset - fileOffset;
+                    var seekRemaining = offset - Offset;
                     var operationRemaining = enumerator.Current.Length - operationOffset;
                     if (seekRemaining < operationRemaining)
                     {
                         operationOffset += seekRemaining;
-                        fileOffset += seekRemaining;
+                        Offset += seekRemaining;
                     }
                     else
                     {
-                        fileOffset += operationRemaining;
+                        Offset += operationRemaining;
                         eof = !enumerator.MoveNext();
                         operationOffset = 0;
                     }
@@ -106,7 +98,7 @@ namespace Hpdi.VssPhysicalLib
                     break;
                 }
                 operationOffset += bytesRead;
-                fileOffset += bytesRead;
+                Offset += bytesRead;
                 if (length >= operationRemaining)
                 {
                     eof = !enumerator.MoveNext();
@@ -122,10 +114,10 @@ namespace Hpdi.VssPhysicalLib
             {
                 enumerator.Dispose();
             }
-            enumerator = operations.GetEnumerator();
+            enumerator = Operations.GetEnumerator();
             eof = !enumerator.MoveNext();
             operationOffset = 0;
-            fileOffset = 0;
+            Offset = 0;
         }
     }
 }

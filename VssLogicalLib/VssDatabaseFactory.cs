@@ -25,12 +25,7 @@ namespace Hpdi.VssLogicalLib
     {
         private readonly string path;
 
-        private Encoding encoding = Encoding.Default;
-        public Encoding Encoding
-        {
-            get { return encoding; }
-            set { encoding = value; }
-        }
+        public Encoding Encoding { get; set; } = Encoding.Default;
 
         public VssDatabaseFactory(string path)
         {
@@ -39,7 +34,7 @@ namespace Hpdi.VssLogicalLib
 
         public VssDatabase Open()
         {
-            return new VssDatabase(path, encoding);
+            return new VssDatabase(path, Encoding);
         }
     }
 }

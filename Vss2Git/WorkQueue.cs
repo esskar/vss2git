@@ -31,12 +31,8 @@ namespace Hpdi.Vss2Git
         private readonly LinkedList<Exception> workExceptions = new LinkedList<Exception>();
         private readonly Dictionary<object, string> workStatuses = new Dictionary<object, string>();
         private object lastStatusWork;
-        private string lastStatus;
 
-        public string LastStatus
-        {
-            get { return lastStatus; }
-        }
+        public string LastStatus { get; private set; }
 
         public WorkQueue()
         {
@@ -104,7 +100,7 @@ namespace Hpdi.Vss2Git
                     else
                     {
                         lastStatusWork = work;
-                        lastStatus = status;
+                        LastStatus = status;
                     }
                 }
             }
@@ -169,14 +165,14 @@ namespace Hpdi.Vss2Git
             if (work == lastStatusWork)
             {
                 lastStatusWork = null;
-                lastStatus = null;
+                LastStatus = null;
 
                 foreach (var entry in workStatuses)
                 {
                     if (!string.IsNullOrEmpty(entry.Value))
                     {
                         lastStatusWork = entry.Key;
-                        lastStatus = entry.Value;
+                        LastStatus = entry.Value;
                         break;
                     }
                 }

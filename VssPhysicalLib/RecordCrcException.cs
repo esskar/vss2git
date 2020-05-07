@@ -23,21 +23,17 @@ namespace Hpdi.VssPhysicalLib
     /// <author>Trevor Robinson</author>
     public class RecordCrcException : RecordException
     {
-        private RecordHeader header;
-        public RecordHeader Header
-        {
-            get { return header; }
-        }
+        public RecordHeader Header { get; }
 
         public RecordCrcException(RecordHeader header)
         {
-            this.header = header;
+            this.Header = header;
         }
 
         public RecordCrcException(RecordHeader header, string message)
             : base(message)
         {
-            this.header = header;
+            this.Header = header;
         }
     }
 }

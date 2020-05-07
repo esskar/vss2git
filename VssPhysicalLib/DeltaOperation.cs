@@ -36,21 +36,18 @@ namespace Hpdi.VssPhysicalLib
     /// <author>Trevor Robinson</author>
     public class DeltaOperation
     {
-        DeltaCommand command;
-        int offset; // meaningful for WriteSuccessor only
-        int length;
         ArraySegment<byte> data; // WriteLog only
 
-        public DeltaCommand Command { get { return command; } }
-        public int Offset { get { return offset; } }
-        public int Length { get { return length; } }
+        public DeltaCommand Command { get; private set; }
+        public int Offset { get; private set; }
+        public int Length { get; private set; }
         public ArraySegment<byte> Data { get { return data; } }
 
         public static DeltaOperation WriteLog(byte[] data, int offset, int length)
         {
             var result = new DeltaOperation();
-            result.command = DeltaCommand.WriteLog;
-            result.length = length;
+            result.Command = DeltaCommand.WriteLog;
+            result.Length = length;
             result.data = new ArraySegment<byte>(data, offset, length);
             return result;
         }
@@ -58,21 +55,21 @@ namespace Hpdi.VssPhysicalLib
         public static DeltaOperation WriteSuccessor(int offset, int length)
         {
             var result = new DeltaOperation();
-            result.command = DeltaCommand.WriteSuccessor;
-            result.offset = offset;
-            result.length = length;
+            result.Command = DeltaCommand.WriteSuccessor;
+            result.Offset = offset;
+            result.Length = length;
             return result;
         }
 
         public void Read(BufferReader reader)
         {
-            command = (DeltaCommand)reader.ReadInt16();
+            Command = (DeltaCommand)reader.ReadInt16();
             reader.Skip(2); // unknown
-            offset = reader.ReadInt32();
-            length = reader.ReadInt32();
-            if (command == DeltaCommand.WriteLog)
+            Offset = reader.ReadInt32();
+            Length = reader.ReadInt32();
+            if (Command == DeltaCommand.WriteLog)
             {
-                data = reader.GetBytes(length);
+                data = reader.GetBytes(Length);
             }
         }
 
@@ -80,7 +77,7 @@ namespace Hpdi.VssPhysicalLib
         {
             const int MAX_DATA_DUMP = 40;
             writer.Write("  {0}: Offset={1}, Length={2}",
-                command, offset, length);
+                Command, Offset, Length);
             if (data.Array != null)
             {
                 var dumpLength = data.Count;
@@ -91,10 +88,10 @@ namespace Hpdi.VssPhysicalLib
                     truncated = true;
                 }
 
-                StringBuilder buf = new StringBuilder(dumpLength);
-                for (int i = 0; i < dumpLength; ++i)
+                var buf = new StringBuilder(dumpLength);
+                for (var i = 0; i < dumpLength; ++i)
                 {
-                    byte b = data.Array[data.Offset + i];
+                    var b = data.Array[data.Offset + i];
                     buf.Append(b >= 0x20 && b <= 0x7E ? (char)b : '.');
                 }
                 writer.Write(", Data: {0}{1}", buf.ToString(), truncated ? "..." : "");

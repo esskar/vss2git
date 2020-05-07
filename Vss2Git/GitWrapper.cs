@@ -32,39 +32,19 @@ namespace Hpdi.Vss2Git
         private readonly string repoPath;
         private readonly Logger logger;
         private readonly Stopwatch stopwatch = new Stopwatch();
-        private string gitExecutable = "git.exe";
-        private string gitInitialArguments = null;
-        private bool shellQuoting = false;
-        private Encoding commitEncoding = Encoding.UTF8;
 
         public TimeSpan ElapsedTime
         {
             get { return stopwatch.Elapsed; }
         }
 
-        public string GitExecutable
-        {
-            get { return gitExecutable; }
-            set { gitExecutable = value; }
-        }
+        public string GitExecutable { get; set; } = "git.exe";
 
-        public string GitInitialArguments
-        {
-            get { return gitInitialArguments; }
-            set { gitInitialArguments = value; }
-        }
+        public string GitInitialArguments { get; set; } = null;
 
-        public bool ShellQuoting
-        {
-            get { return shellQuoting; }
-            set { shellQuoting = value; }
-        }
+        public bool ShellQuoting { get; set; } = false;
 
-        public Encoding CommitEncoding
-        {
-            get { return commitEncoding; }
-            set { commitEncoding = value; }
-        }
+        public Encoding CommitEncoding { get; set; } = Encoding.UTF8;
 
         public GitWrapper(string repoPath, Logger logger)
         {
@@ -74,19 +54,18 @@ namespace Hpdi.Vss2Git
 
         public bool FindExecutable()
         {
-            string foundPath;
-            if (FindInPathVar("git.exe", out foundPath))
+            if (FindInPathVar("git.exe", out var foundPath))
             {
-                gitExecutable = foundPath;
-                gitInitialArguments = null;
-                shellQuoting = false;
+                GitExecutable = foundPath;
+                GitInitialArguments = null;
+                ShellQuoting = false;
                 return true;
             }
             if (FindInPathVar("git.cmd", out foundPath))
             {
-                gitExecutable = "cmd.exe";
-                gitInitialArguments = "/c git";
-                shellQuoting = true;
+                GitExecutable = "cmd.exe";
+                GitInitialArguments = "/c git";
+                ShellQuoting = true;
                 return true;
             }
             return false;
@@ -105,21 +84,6 @@ namespace Hpdi.Vss2Git
         public bool Add(string path)
         {
             var startInfo = GetStartInfo("add -- " + Quote(path));
-
-            // add fails if there are no files (directories don't count)
-            return ExecuteUnless(startInfo, "did not match any files");
-        }
-
-        public bool Add(IEnumerable<string> paths)
-        {
-            if (CollectionUtil.IsEmpty(paths))
-            {
-                return false;
-            }
-
-            var args = new StringBuilder("add -- ");
-            CollectionUtil.Join(args, " ", CollectionUtil.Transform<string, string>(paths, Quote));
-            var startInfo = GetStartInfo(args.ToString());
 
             // add fails if there are no files (directories don't count)
             return ExecuteUnless(startInfo, "did not match any files");
@@ -154,18 +118,14 @@ namespace Hpdi.Vss2Git
 
         class TempFile : IDisposable
         {
-            private readonly string name;
             private readonly FileStream fileStream;
 
-            public string Name
-            {
-                get { return name; }
-            }
+            public string Name { get; }
 
             public TempFile()
             {
-                name = Path.GetTempFileName();
-                fileStream = new FileStream(name, FileMode.Truncate, FileAccess.Write, FileShare.Read);
+                Name = Path.GetTempFileName();
+                fileStream = new FileStream(Name, FileMode.Truncate, FileAccess.Write, FileShare.Read);
             }
 
             public void Write(string text, Encoding encoding)
@@ -177,13 +137,10 @@ namespace Hpdi.Vss2Git
 
             public void Dispose()
             {
-                if (fileStream != null)
+                fileStream?.Dispose();
+                if (Name != null)
                 {
-                    fileStream.Dispose();
-                }
-                if (name != null)
-                {
-                    File.Delete(name);
+                    File.Delete(Name);
                 }
             }
         }
@@ -199,11 +156,11 @@ namespace Hpdi.Vss2Git
             {
                 // need to use a temporary file to specify the comment when not
                 // using the system default code page or it contains newlines
-                if (commitEncoding.CodePage != Encoding.Default.CodePage || comment.IndexOf('\n') >= 0)
+                if (CommitEncoding.CodePage != Encoding.Default.CodePage || comment.IndexOf('\n') >= 0)
                 {
                     logger.WriteLine("Generating temp file for comment: {0}", comment);
                     tempFile = new TempFile();
-                    tempFile.Write(comment, commitEncoding);
+                    tempFile.Write(comment, CommitEncoding);
 
                     // temporary path might contain spaces (e.g. "Documents and Settings")
                     args += " -F " + Quote(tempFile.Name);
@@ -217,10 +174,8 @@ namespace Hpdi.Vss2Git
 
         public bool Commit(string authorName, string authorEmail, string comment, DateTime localTime)
         {
-            TempFile commentFile;
-
             var args = "commit";
-            AddComment(comment, ref args, out commentFile);
+            AddComment(comment, ref args, out var commentFile);
 
             using (commentFile)
             {
@@ -242,10 +197,8 @@ namespace Hpdi.Vss2Git
 
         public void Tag(string name, string taggerName, string taggerEmail, string comment, DateTime localTime)
         {
-            TempFile commentFile;
-
             var args = "tag";
-            AddComment(comment, ref args, out commentFile);
+            AddComment(comment, ref args, out var commentFile);
 
             // tag names are not quoted because they cannot contain whitespace or quotes
             args += " -- " + name;
@@ -278,12 +231,12 @@ namespace Hpdi.Vss2Git
 
         private ProcessStartInfo GetStartInfo(string args)
         {
-            if (!string.IsNullOrEmpty(gitInitialArguments))
+            if (!string.IsNullOrEmpty(GitInitialArguments))
             {
-                args = gitInitialArguments + " " + args;
+                args = GitInitialArguments + " " + args;
             }
 
-            var startInfo = new ProcessStartInfo(gitExecutable, args);
+            var startInfo = new ProcessStartInfo(GitExecutable, args);
             startInfo.UseShellExecute = false;
             startInfo.RedirectStandardInput = true;
             startInfo.RedirectStandardOutput = true;
@@ -295,8 +248,7 @@ namespace Hpdi.Vss2Git
 
         private bool ExecuteUnless(ProcessStartInfo startInfo, string unless)
         {
-            string stdout, stderr;
-            int exitCode = Execute(startInfo, out stdout, out stderr);
+            var exitCode = Execute(startInfo, out var stdout, out var stderr);
             if (exitCode != 0)
             {
                 if (string.IsNullOrEmpty(unless) ||
@@ -342,7 +294,7 @@ namespace Hpdi.Vss2Git
 
                         while (true)
                         {
-                            string line = stdoutReader.ReadLine();
+                            var line = stdoutReader.ReadLine();
                             if (line != null)
                             {
                                 line = line.TrimEnd();
@@ -405,7 +357,7 @@ namespace Hpdi.Vss2Git
 
         private bool FindInPathVar(string filename, out string foundPath)
         {
-            string path = Environment.GetEnvironmentVariable("PATH");
+            var path = Environment.GetEnvironmentVariable("PATH");
             if (!string.IsNullOrEmpty(path))
             {
                 return FindInPaths(filename, path.Split(Path.PathSeparator), out foundPath);
@@ -416,9 +368,9 @@ namespace Hpdi.Vss2Git
 
         private bool FindInPaths(string filename, IEnumerable<string> searchPaths, out string foundPath)
         {
-            foreach (string searchPath in searchPaths)
+            foreach (var searchPath in searchPaths)
             {
-                string path = Path.Combine(searchPath, filename);
+                var path = Path.Combine(searchPath, filename);
                 if (File.Exists(path))
                 {
                     foundPath = path;
@@ -458,9 +410,9 @@ namespace Hpdi.Vss2Git
             }
 
             StringBuilder buf = null;
-            for (int i = 0; i < arg.Length; ++i)
+            for (var i = 0; i < arg.Length; ++i)
             {
-                char c = arg[i];
+                var c = arg[i];
                 if (buf == null && NeedsQuoting(c))
                 {
                     buf = new StringBuilder(arg.Length + 2);
@@ -487,7 +439,7 @@ namespace Hpdi.Vss2Git
         private bool NeedsQuoting(char c)
         {
             return char.IsWhiteSpace(c) || c == QuoteChar ||
-                (shellQuoting && (c == '&' || c == '|' || c == '<' || c == '>' || c == '^' || c == '%'));
+                (ShellQuoting && (c == '&' || c == '|' || c == '<' || c == '>' || c == '^' || c == '%'));
         }
     }
 }

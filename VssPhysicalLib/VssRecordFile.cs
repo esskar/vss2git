@@ -24,17 +24,13 @@ namespace Hpdi.VssPhysicalLib
     /// <author>Trevor Robinson</author>
     public class VssRecordFile
     {
-        private readonly string filename;
         protected readonly BufferReader reader;
 
-        public string Filename
-        {
-            get { return filename; }
-        }
+        public string Filename { get; }
 
         public VssRecordFile(string filename, Encoding encoding)
         {
-            this.filename = filename;
+            this.Filename = filename;
             reader = new BufferReader(encoding, ReadFile(filename));
         }
 
@@ -42,10 +38,10 @@ namespace Hpdi.VssPhysicalLib
         {
             try
             {
-                RecordHeader recordHeader = new RecordHeader();
+                var recordHeader = new RecordHeader();
                 recordHeader.Read(reader);
 
-                BufferReader recordReader = reader.Extract(recordHeader.Length);
+                var recordReader = reader.Extract(recordHeader.Length);
 
                 // comment records always seem to have a zero CRC
                 if (recordHeader.Signature != CommentRecord.SIGNATURE)
@@ -75,10 +71,10 @@ namespace Hpdi.VssPhysicalLib
             {
                 try
                 {
-                    RecordHeader recordHeader = new RecordHeader();
+                    var recordHeader = new RecordHeader();
                     recordHeader.Read(reader);
 
-                    BufferReader recordReader = reader.Extract(recordHeader.Length);
+                    var recordReader = reader.Extract(recordHeader.Length);
 
                     // comment records always seem to have a zero CRC
                     if (recordHeader.Signature != CommentRecord.SIGNATURE)
@@ -108,10 +104,10 @@ namespace Hpdi.VssPhysicalLib
             bool ignoreUnknown)
             where T : VssRecord
         {
-            RecordHeader recordHeader = new RecordHeader();
+            var recordHeader = new RecordHeader();
             recordHeader.Read(reader);
 
-            BufferReader recordReader = reader.Extract(recordHeader.Length);
+            var recordReader = reader.Extract(recordHeader.Length);
 
             // comment records always seem to have a zero CRC
             if (recordHeader.Signature != CommentRecord.SIGNATURE)
@@ -119,7 +115,7 @@ namespace Hpdi.VssPhysicalLib
                 recordHeader.CheckCrc();
             }
 
-            T record = creationCallback(recordHeader, recordReader);
+            var record = creationCallback(recordHeader, recordReader);
             if (record != null)
             {
                 // double-check that the object signature matches the file
@@ -152,7 +148,7 @@ namespace Hpdi.VssPhysicalLib
         {
             while (reader.Remaining > RecordHeader.LENGTH)
             {
-                T record = GetRecord<T>(creationCallback, skipUnknown);
+                var record = GetRecord<T>(creationCallback, skipUnknown);
                 if (record != null)
                 {
                     return record;

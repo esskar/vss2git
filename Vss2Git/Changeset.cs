@@ -25,37 +25,14 @@ namespace Hpdi.Vss2Git
     /// <author>Trevor Robinson</author>
     class Changeset
     {
-        private DateTime dateTime;
-        public DateTime DateTime
-        {
-            get { return dateTime; }
-            set { dateTime = value; }
-        }
+        public DateTime DateTime { get; set; }
 
-        private string user;
-        public string User
-        {
-            get { return user; }
-            set { user = value; }
-        }
+        public string User { get; set; }
 
-        private string comment;
-        public string Comment
-        {
-            get { return comment; }
-            set { comment = value; }
-        }
+        public string Comment { get; set; }
 
-        private readonly LinkedList<Revision> revisions = new LinkedList<Revision>();
-        public LinkedList<Revision> Revisions
-        {
-            get { return revisions; }
-        }
+        public LinkedList<Revision> Revisions { get; } = new LinkedList<Revision>();
 
-        private readonly HashSet<string> targetFiles = new HashSet<string>();
-        public HashSet<string> TargetFiles
-        {
-            get { return targetFiles; }
-        }
+        public HashSet<string> TargetFiles { get; } = new HashSet<string>();
     }
 }

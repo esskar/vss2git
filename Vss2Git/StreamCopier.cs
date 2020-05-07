@@ -27,12 +27,7 @@ namespace Hpdi.Vss2Git
 
         private byte[] buffer;
 
-        private int bufferSize;
-        public int BufferSize
-        {
-            get { return bufferSize; }
-            set { bufferSize = value; }
-        }
+        public int BufferSize { get; set; }
 
         public StreamCopier()
             : this(DEFAULT_BUFFER_SIZE)
@@ -41,19 +36,19 @@ namespace Hpdi.Vss2Git
 
         public StreamCopier(int bufferSize)
         {
-            this.bufferSize = bufferSize;
+            this.BufferSize = bufferSize;
         }
 
         public long Copy(Stream inputStream, Stream outputStream)
         {
             if (buffer == null)
             {
-                buffer = new byte[bufferSize];
+                buffer = new byte[BufferSize];
             }
             long copied = 0;
             while (true)
             {
-                int count = inputStream.Read(buffer, 0, buffer.Length);
+                var count = inputStream.Read(buffer, 0, buffer.Length);
                 if (count <= 0)
                 {
                     break;

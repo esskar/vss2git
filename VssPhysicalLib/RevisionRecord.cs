@@ -86,7 +86,7 @@ namespace Hpdi.VssPhysicalLib
 
         public static Action PeekAction(BufferReader reader)
         {
-            int saveOffset = reader.Offset;
+            var saveOffset = reader.Offset;
             try
             {
                 reader.Skip(4);
@@ -128,24 +128,23 @@ namespace Hpdi.VssPhysicalLib
     public class CommonRevisionRecord : RevisionRecord
     {
         VssName name;
-        string physical;
 
         public VssName Name { get { return name; } }
-        public string Physical { get { return physical; } }
+        public string Physical { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
             base.Read(reader, header);
 
             name = reader.ReadName();
-            physical = reader.ReadString(10);
+            Physical = reader.ReadString(10);
         }
 
         public override void Dump(TextWriter writer)
         {
             base.Dump(writer);
 
-            writer.WriteLine("  Name: {0} ({1})", name.ShortName, physical);
+            writer.WriteLine("  Name: {0} ({1})", name.ShortName, Physical);
         }
     }
 
@@ -153,10 +152,9 @@ namespace Hpdi.VssPhysicalLib
     {
         VssName name;
         short unkShort;
-        string physical;
 
         public VssName Name { get { return name; } }
-        public string Physical { get { return physical; } }
+        public string Physical { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
@@ -164,14 +162,14 @@ namespace Hpdi.VssPhysicalLib
 
             name = reader.ReadName();
             unkShort = reader.ReadInt16(); // 0 or 1
-            physical = reader.ReadString(10);
+            Physical = reader.ReadString(10);
         }
 
         public override void Dump(TextWriter writer)
         {
             base.Dump(writer);
 
-            writer.WriteLine("  Name: {0} ({1})", name.ShortName, physical);
+            writer.WriteLine("  Name: {0} ({1})", name.ShortName, Physical);
         }
     }
 
@@ -179,11 +177,10 @@ namespace Hpdi.VssPhysicalLib
     {
         VssName name;
         VssName oldName;
-        string physical;
 
         public VssName Name { get { return name; } }
         public VssName OldName { get { return oldName; } }
-        public string Physical { get { return physical; } }
+        public string Physical { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
@@ -191,7 +188,7 @@ namespace Hpdi.VssPhysicalLib
 
             name = reader.ReadName();
             oldName = reader.ReadName();
-            physical = reader.ReadString(10);
+            Physical = reader.ReadString(10);
         }
 
         public override void Dump(TextWriter writer)
@@ -199,78 +196,72 @@ namespace Hpdi.VssPhysicalLib
             base.Dump(writer);
 
             writer.WriteLine("  Name: {0} -> {1} ({2})",
-                oldName.ShortName, name.ShortName, physical);
+                oldName.ShortName, name.ShortName, Physical);
         }
     }
 
     public class MoveRevisionRecord : RevisionRecord
     {
-        string projectPath;
         VssName name;
-        string physical;
 
-        public string ProjectPath { get { return projectPath; } }
+        public string ProjectPath { get; private set; }
         public VssName Name { get { return name; } }
-        public string Physical { get { return physical; } }
+        public string Physical { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
             base.Read(reader, header);
 
-            projectPath = reader.ReadString(260);
+            ProjectPath = reader.ReadString(260);
             name = reader.ReadName();
-            physical = reader.ReadString(10);
+            Physical = reader.ReadString(10);
         }
 
         public override void Dump(TextWriter writer)
         {
             base.Dump(writer);
 
-            writer.WriteLine("  Project path: {0}", projectPath);
-            writer.WriteLine("  Name: {0} ({1})", name.ShortName, physical);
+            writer.WriteLine("  Project path: {0}", ProjectPath);
+            writer.WriteLine("  Name: {0} ({1})", name.ShortName, Physical);
         }
     }
 
     public class ShareRevisionRecord : RevisionRecord
     {
-        string projectPath;
         VssName name;
-        short unpinnedRevision; // -1: shared, 0: pinned; >0 unpinned version
-        short pinnedRevision; // >0: pinned version, ==0 unpinned
         short unkShort;
-        string physical;
 
-        public string ProjectPath { get { return projectPath; } }
+        public string ProjectPath { get; private set; }
         public VssName Name { get { return name; } }
-        public short UnpinnedRevision { get { return unpinnedRevision; } }
-        public short PinnedRevision { get { return pinnedRevision; } }
-        public string Physical { get { return physical; } }
+        public short UnpinnedRevision { get; private set; }
+        public short PinnedRevision { get; private set; }
+        public string Physical { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
             base.Read(reader, header);
 
-            projectPath = reader.ReadString(260);
+            ProjectPath = reader.ReadString(260);
             name = reader.ReadName();
-            unpinnedRevision = reader.ReadInt16();
-            pinnedRevision = reader.ReadInt16();
+            UnpinnedRevision = reader.ReadInt16();
+            PinnedRevision = reader.ReadInt16();
             unkShort = reader.ReadInt16(); // often seems to increment
-            physical = reader.ReadString(10);
+            Physical = reader.ReadString(10);
         }
 
         public override void Dump(TextWriter writer)
         {
             base.Dump(writer);
 
-            writer.WriteLine("  Project path: {0}", projectPath);
-            writer.WriteLine("  Name: {0} ({1})", name.ShortName, physical);
-            if (unpinnedRevision == 0)
+            writer.WriteLine("  Project path: {0}", ProjectPath);
+            writer.WriteLine("  Name: {0} ({1})", name.ShortName, Physical);
+            if (UnpinnedRevision == 0)
             {
-                writer.WriteLine("  Pinned at revision {0}", pinnedRevision);
+                writer.WriteLine("  Pinned at revision {0}", PinnedRevision);
             }
-            else if (unpinnedRevision > 0)
+            else if (UnpinnedRevision > 0)
             {
-                writer.WriteLine("  Unpinned at revision {0}", unpinnedRevision);
+                writer.WriteLine("  Unpinned at revision {0}", UnpinnedRevision);
             }
         }
     }
@@ -278,75 +269,68 @@ namespace Hpdi.VssPhysicalLib
     public class BranchRevisionRecord : RevisionRecord
     {
         VssName name;
-        string physical;
-        string branchFile;
 
         public VssName Name { get { return name; } }
-        public string Physical { get { return physical; } }
-        public string BranchFile { get { return branchFile; } }
+        public string Physical { get; private set; }
+        public string BranchFile { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
             base.Read(reader, header);
 
             name = reader.ReadName();
-            physical = reader.ReadString(10);
-            branchFile = reader.ReadString(10);
+            Physical = reader.ReadString(10);
+            BranchFile = reader.ReadString(10);
         }
 
         public override void Dump(TextWriter writer)
         {
             base.Dump(writer);
 
-            writer.WriteLine("  Name: {0} ({1})", name.ShortName, physical);
-            writer.WriteLine("  Branched from file: {0}", branchFile);
+            writer.WriteLine("  Name: {0} ({1})", name.ShortName, Physical);
+            writer.WriteLine("  Branched from file: {0}", BranchFile);
         }
     }
 
     public class EditRevisionRecord : RevisionRecord
     {
-        int prevDeltaOffset;
-        string projectPath;
-
-        public int PrevDeltaOffset { get { return prevDeltaOffset; } }
-        public string ProjectPath { get { return projectPath; } }
+        public int PrevDeltaOffset { get; private set; }
+        public string ProjectPath { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
             base.Read(reader, header);
 
-            prevDeltaOffset = reader.ReadInt32();
+            PrevDeltaOffset = reader.ReadInt32();
             reader.Skip(4); // reserved; always 0
-            projectPath = reader.ReadString(260);
+            ProjectPath = reader.ReadString(260);
         }
 
         public override void Dump(TextWriter writer)
         {
             base.Dump(writer);
 
-            writer.WriteLine("  Prev delta offset: {0:X6}", prevDeltaOffset);
-            writer.WriteLine("  Project path: {0}", projectPath);
+            writer.WriteLine("  Prev delta offset: {0:X6}", PrevDeltaOffset);
+            writer.WriteLine("  Project path: {0}", ProjectPath);
         }
     }
 
     public class ArchiveRevisionRecord : RevisionRecord
     {
         VssName name;
-        string physical;
-        string archivePath;
 
         public VssName Name { get { return name; } }
-        public string Physical { get { return physical; } }
-        public string ArchivePath { get { return archivePath; } }
+        public string Physical { get; private set; }
+        public string ArchivePath { get; private set; }
 
         public override void Read(BufferReader reader, RecordHeader header)
         {
             base.Read(reader, header);
 
             name = reader.ReadName();
-            physical = reader.ReadString(10);
+            Physical = reader.ReadString(10);
             reader.Skip(2); // 0?
-            archivePath = reader.ReadString(260);
+            ArchivePath = reader.ReadString(260);
             reader.Skip(4); // ?
         }
 
@@ -354,8 +338,8 @@ namespace Hpdi.VssPhysicalLib
         {
             base.Dump(writer);
 
-            writer.WriteLine("  Name: {0} ({1})", name.ShortName, physical);
-            writer.WriteLine("  Archive path: {0}", archivePath);
+            writer.WriteLine("  Name: {0} ({1})", name.ShortName, Physical);
+            writer.WriteLine("  Archive path: {0}", ArchivePath);
         }
     }
 }

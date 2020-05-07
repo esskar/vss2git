@@ -24,12 +24,7 @@ namespace Hpdi.VssPhysicalLib
     /// <author>Trevor Robinson</author>
     public class ItemFile : VssRecordFile
     {
-        private readonly ItemHeaderRecord header;
-
-        public ItemHeaderRecord Header
-        {
-            get { return header; }
-        }
+        public ItemHeaderRecord Header { get; }
 
         public ItemFile(string filename, Encoding encoding)
             : base(filename, encoding)
@@ -53,15 +48,15 @@ namespace Hpdi.VssPhysicalLib
 
                 if (fileType == ItemType.Project)
                 {
-                    header = new ProjectHeaderRecord();
+                    Header = new ProjectHeaderRecord();
                 }
                 else
                 {
-                    header = new FileHeaderRecord();
+                    Header = new FileHeaderRecord();
                 }
 
-                ReadRecord(header);
-                if (header.ItemType != fileType)
+                ReadRecord(Header);
+                if (Header.ItemType != fileType)
                 {
                     throw new BadHeaderException("Header record type mismatch");
                 }
@@ -88,9 +83,9 @@ namespace Hpdi.VssPhysicalLib
 
         public RevisionRecord GetFirstRevision()
         {
-            if (header.FirstRevOffset > 0)
+            if (Header.FirstRevOffset > 0)
             {
-                return GetRecord<RevisionRecord>(CreateRevisionRecord, false, header.FirstRevOffset);
+                return GetRecord<RevisionRecord>(CreateRevisionRecord, false, Header.FirstRevOffset);
             }
             return null;
         }
@@ -107,9 +102,9 @@ namespace Hpdi.VssPhysicalLib
 
         public RevisionRecord GetLastRevision()
         {
-            if (header.LastRevOffset > 0)
+            if (Header.LastRevOffset > 0)
             {
-                return GetRecord<RevisionRecord>(CreateRevisionRecord, false, header.LastRevOffset);
+                return GetRecord<RevisionRecord>(CreateRevisionRecord, false, Header.LastRevOffset);
             }
             return null;
         }
@@ -137,8 +132,7 @@ namespace Hpdi.VssPhysicalLib
         public ICollection<string> GetProjects()
         {
             var result = new LinkedList<string>();
-            var fileHeader = header as FileHeaderRecord;
-            if (fileHeader != null)
+            if (Header is FileHeaderRecord fileHeader)
             {
                 var record = new ProjectRecord();
                 var offset = fileHeader.ProjectOffset;

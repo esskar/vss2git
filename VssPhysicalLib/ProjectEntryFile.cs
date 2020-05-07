@@ -36,7 +36,7 @@ namespace Hpdi.VssPhysicalLib
 
         public ProjectEntryRecord GetNextEntry()
         {
-            ProjectEntryRecord record = new ProjectEntryRecord();
+            var record = new ProjectEntryRecord();
             return ReadNextRecord(record) ? record : null;
         }
     }

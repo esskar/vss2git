@@ -27,11 +27,7 @@ namespace Hpdi.VssDump
     {
         private readonly TextWriter writer;
 
-        private readonly HashSet<string> physicalNames = new HashSet<string>();
-        public HashSet<string> PhysicalNames
-        {
-            get { return physicalNames; }
-        }
+        public HashSet<string> PhysicalNames { get; } = new HashSet<string>();
 
         public bool IncludeRevisions { get; set; }
 
@@ -49,24 +45,24 @@ namespace Hpdi.VssDump
         {
             var indentStr = new string(' ', indent);
 
-            physicalNames.Add(project.PhysicalName);
+            PhysicalNames.Add(project.PhysicalName);
             writer.WriteLine("{0}{1}/ ({2})",
                 indentStr, project.Name, project.PhysicalName);
 
-            foreach (VssProject subproject in project.Projects)
+            foreach (var subproject in project.Projects)
             {
                 DumpProject(subproject, indent + 2);
             }
 
-            foreach (VssFile file in project.Files)
+            foreach (var file in project.Files)
             {
-                physicalNames.Add(file.PhysicalName);
+                PhysicalNames.Add(file.PhysicalName);
                 writer.WriteLine("{0}  {1} ({2}) - {3}",
                     indentStr, file.Name, file.PhysicalName, file.GetPath(project));
 
                 if (IncludeRevisions)
                 {
-                    foreach (VssFileRevision version in file.Revisions)
+                    foreach (var version in file.Revisions)
                     {
                         writer.WriteLine("{0}    #{1} {2} {3}",
                             indentStr, version.Version, version.User, version.DateTime);

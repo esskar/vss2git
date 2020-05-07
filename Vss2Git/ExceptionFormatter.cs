@@ -27,15 +27,13 @@ namespace Hpdi.Vss2Git
         {
             var message = e.Message;
 
-            var processExit = e as ProcessExitException;
-            if (processExit != null)
+            if (e is ProcessExitException processExit)
             {
                 return string.Format("{0}\nExecutable: {1}\nArguments: {2}\nStdout: {3}\nStderr: {4}",
                     message, processExit.Executable, processExit.Arguments, processExit.Stdout, processExit.Stderr);
             }
 
-            var process = e as ProcessException;
-            if (process != null)
+            if (e is ProcessException process)
             {
                 return string.Format("{0}\nExecutable: {1}\nArguments: {2}",
                     message, process.Executable, process.Arguments);

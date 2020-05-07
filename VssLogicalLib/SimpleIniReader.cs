@@ -24,23 +24,19 @@ namespace Hpdi.VssLogicalLib
     /// <author>Trevor Robinson</author>
     class SimpleIniReader
     {
-        private readonly string filename;
         private readonly Dictionary<string, string> entries = new Dictionary<string, string>();
 
         public SimpleIniReader(string filename)
         {
-            this.filename = filename;
+            this.Filename = filename;
         }
 
-        public string Filename
-        {
-            get { return filename; }
-        }
+        public string Filename { get; }
 
         public void Parse()
         {
             entries.Clear();
-            using (var reader = new StreamReader(filename))
+            using (var reader = new StreamReader(Filename))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)

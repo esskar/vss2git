@@ -58,7 +58,7 @@ namespace Hpdi.VssPhysicalLib
                 if (length < 0)
                 {
                     length = 0;
-                    foreach (DeltaOperation operation in simulator.Operations)
+                    foreach (var operation in simulator.Operations)
                     {
                         length += operation.Length;
                     }
@@ -81,7 +81,7 @@ namespace Hpdi.VssPhysicalLib
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int bytesRead = 0;
+            var bytesRead = 0;
             simulator.Read(count,
                 delegate(byte[] opData, int opOffset, int opCount)
                 {

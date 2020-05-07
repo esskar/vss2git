@@ -44,12 +44,8 @@ namespace Hpdi.Vss2Git
         private int maxLineLength;
 
         private bool readPending;
-        private bool endOfFile;
 
-        public bool EndOfFile
-        {
-            get { return endOfFile; }
-        }
+        public bool EndOfFile { get; private set; }
 
         public event EventHandler DataReceived;
 
@@ -70,14 +66,14 @@ namespace Hpdi.Vss2Git
 
         public string ReadLine()
         {
-            bool found = false;
+            var found = false;
             lock (readBuffer)
             {
                 do
                 {
                     while (copyOffset < copyLimit)
                     {
-                        char c = decodeBuffer[copyOffset++];
+                        var c = decodeBuffer[copyOffset++];
                         lineBuilder.Append(c);
                         if (c == '\n' || lineBuilder.Length == maxLineLength)
                         {
@@ -89,15 +85,15 @@ namespace Hpdi.Vss2Git
                     if (!found && undecodedBytes > 0)
                     {
                         // undecoded bytes may wrap around buffer, in which case two decodes are necessary
-                        int readTailCount = readBuffer.Length - decodeOffset;
-                        int decodeCount = Math.Min(undecodedBytes, readTailCount);
+                        var readTailCount = readBuffer.Length - decodeOffset;
+                        var decodeCount = Math.Min(undecodedBytes, readTailCount);
 
                         // need to leave room for an extra char in case one is flushed out from the last decode
                         decodeCount = Math.Min(decodeCount, decodeBuffer.Length - 1);
 
                         copyOffset = 0;
                         copyLimit = decoder.GetChars(
-                            readBuffer, decodeOffset, decodeCount, decodeBuffer, copyOffset, endOfFile);
+                            readBuffer, decodeOffset, decodeCount, decodeBuffer, copyOffset, EndOfFile);
 
                         undecodedBytes -= decodeCount;
                         decodeOffset += decodeCount;
@@ -109,12 +105,12 @@ namespace Hpdi.Vss2Git
                 }
                 while (!found && copyOffset < copyLimit);
 
-                if (!readPending && !endOfFile)
+                if (!readPending && !EndOfFile)
                 {
                     StartRead();
                 }
 
-                if (endOfFile && lineBuilder.Length > 0)
+                if (EndOfFile && lineBuilder.Length > 0)
                 {
                     lineBuilder.Append(Environment.NewLine);
                     found = true;
@@ -132,7 +128,7 @@ namespace Hpdi.Vss2Git
 
         protected virtual void OnDataReceived()
         {
-            EventHandler handler = DataReceived;
+            var handler = DataReceived;
             if (handler != null)
             {
                 handler(this, EventArgs.Empty);
@@ -142,7 +138,7 @@ namespace Hpdi.Vss2Git
         // Assumes buffer lock is held or called from constructor.
         private void StartRead()
         {
-            int readCount = 0;
+            var readCount = 0;
             if (decodeOffset > readOffset)
             {
                 readCount = decodeOffset - readOffset;
@@ -166,7 +162,7 @@ namespace Hpdi.Vss2Git
                 {
                     readPending = false;
 
-                    int count = stream.EndRead(ar);
+                    var count = stream.EndRead(ar);
                     if (count > 0)
                     {
                         undecodedBytes += count;
@@ -181,13 +177,13 @@ namespace Hpdi.Vss2Git
                     else
                     {
                         // zero-length read indicates end of file
-                        endOfFile = true;
+                        EndOfFile = true;
                     }
                 }
                 catch
                 {
                     // simulate end of file on read error
-                    endOfFile = true;
+                    EndOfFile = true;
                 }
             }
 

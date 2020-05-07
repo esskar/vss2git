@@ -23,21 +23,17 @@ namespace Hpdi.VssPhysicalLib
     /// <author>Trevor Robinson</author>
     public class UnrecognizedRecordException : RecordException
     {
-        private RecordHeader header;
-        public RecordHeader Header
-        {
-            get { return header; }
-        }
+        public RecordHeader Header { get; }
 
         public UnrecognizedRecordException(RecordHeader header)
         {
-            this.header = header;
+            this.Header = header;
         }
 
         public UnrecognizedRecordException(RecordHeader header, string message)
             : base(message)
         {
-            this.header = header;
+            this.Header = header;
         }
     }
 }
